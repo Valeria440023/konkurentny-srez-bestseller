@@ -97,8 +97,11 @@ thead th{border-bottom:1px solid var(--line-strong)}
 th:first-child,td:first-child{text-align:left}
 td:first-child{white-space:normal;min-width:170px}
 tbody tr:hover td{background:var(--bg)}
-tr.sub td{background:var(--bg);font-weight:600}
-tr.tot td{font-weight:600;border-top:1px solid var(--line-strong)}
+/* итоги — единый стиль для всех таблиц: подытог светлее, общий итог насыщеннее, итоговые столбцы — лёгкая заливка */
+tr.sub td,tbody tr.sub:hover td{background:var(--c2);font-weight:600}
+tr.tot td,tbody tr.tot:hover td{background:var(--c3);font-weight:700;border-top:1px solid var(--r3)}
+td.totc,tbody tr:hover td.totc{background:var(--c1);font-weight:600}
+tr.sub td.totc{background:var(--c2)} tr.tot td.totc{background:var(--c3)} tr.me td.totc{background:var(--own-soft)}
 tr.tot td:first-child{box-shadow:inset 3px 0 0 var(--ink)}
 tr.me td,tbody tr.me:hover td{background:var(--own-soft);font-weight:600}
 tr.me td:first-child{box-shadow:inset 3px 0 0 var(--own);color:var(--own)}
@@ -522,9 +525,7 @@ function renderDeal(){
   /* 1. Сделки по месяцам */
   const [dps,dl]=scopes[S.dScope];const months=[...Array(12).keys()].map(i=>m-11+i).filter(x=>x>=0);const series=months.map(x=>cnt(x,dps));
   const cur=series.at(-1),prv=cnt(m-1,dps),mom=pct(cur,prv);
-  h+=slide(`Сделки. ${mLong(m)}`,tn+" · "+dl,
-   `<div class="sh"><div class="note">По данным за ${mLong(m)} — ${cur} сделок, ${mom>=0?"на "+f0(Math.abs(mom))+"% выше":"на "+f0(Math.abs(mom))+"% ниже"} предыдущего месяца. Максимум за 12 мес — ${Math.max(...series)}, минимум — ${Math.min(...series)}.</div><span class="badge">${pc(mom)} за посл. месяц</span></div>
-    <div><div class="ct">Сделки, шт</div><div class="chart"><canvas id="d1"></canvas></div></div>`,scopeSel("dScope",S.dScope));
+  const d1Note=`По данным за ${mLong(m)} — ${cur} сделок, ${mom>=0?"на "+f0(Math.abs(mom))+"% выше":"на "+f0(Math.abs(mom))+"% ниже"} предыдущего месяца. Максимум за 12 мес — ${Math.max(...series)}, минимум — ${Math.min(...series)}.`;
 
   /* 2. Сделки за месяц по проектам + таблица */
   const ms=[...Array(12).keys()].map(i=>m-11+i).filter(x=>x>=0);
@@ -532,9 +533,10 @@ function renderDeal(){
   const mv=(x,ps)=>{let rows=D(x,x,ps);if(S.dMet==="n")return rows.length;rows=rows.filter(r=>r[4]>0&&r[5]>0);if(!rows.length)return null;const g=dag(rows);return S.dMet==="ar"?g.ar:g.ppm/1000};
   const pr=ALL.map(p=>({p,v:ms.map(x=>cnt(x,[p])),w:ms.map(x=>mv(x,[p]))})).filter(r=>r.v.some(x=>x)||r.p===0).sort((a,b)=>b.v.at(-1)-a.v.at(-1)||b.v.reduce((x,y)=>x+y)-a.v.reduce((x,y)=>x+y));
   const lead=[...pr].sort((a,b)=>b.v.at(-1)-a.v.at(-1));
-  h+=slide(`Сделки. ${mLong(m)}`,tn+" · "+mT.toLowerCase(),
-   `${note([`Лидер месяца — ${P[lead[0].p]} (${lead[0].v.at(-1)}), далее ${lead.slice(1,3).map(r=>P[r.p]+" ("+r.v.at(-1)+")").join(", ")}`,`Бестселлер: ${pr.find(r=>r.p===0).v.at(-1)} сделок в месяце, ${pr.find(r=>r.p===0).v.reduce((a,b)=>a+b)} за 12 мес`])}
-    <div><div class="ct">${mT} за ${mLong(m)}, ${mU}</div><div class="chart tall"><canvas id="d2"></canvas></div></div>
+  h+=slide(`Сделки. ${mLong(m)}`,tn,
+   `${note([d1Note,`Лидер месяца — ${P[lead[0].p]} (${lead[0].v.at(-1)}), далее ${lead.slice(1,3).map(r=>P[r.p]+" ("+r.v.at(-1)+")").join(", ")}`,`Бестселлер: ${pr.find(r=>r.p===0).v.at(-1)} сделок в месяце, ${pr.find(r=>r.p===0).v.reduce((a,b)=>a+b)} за 12 мес`])}
+    <div class="cols"><div><div class="sh"><div class="ct">Сделки по месяцам, шт<small>${dl} · <span class="${cls(mom)}">${pc(mom)}</span> за посл. месяц</small></div>${scopeSel("dScope",S.dScope)}</div><div class="chart tall"><canvas id="d1"></canvas></div></div>
+     <div><div class="ct">${mT} за ${mLong(m)}, ${mU}<small>по проектам · переключатель вверху справа</small></div><div class="chart tall"><canvas id="d2"></canvas></div></div></div>
     <div class="tbl" style="margin-top:16px"><table><thead><tr><th>Проект</th>${ms.map(x=>`<th>${mL(x)}</th>`).join("")}<th>Прирост за посл. месяц</th></tr></thead><tbody>
      ${pr.map(r=>`<tr class="${r.p===0?"me":""}"><td>${P[r.p]}</td>${r.w.map(v=>`<td>${mF(v)}</td>`).join("")}<td class="${cls(pct(r.w.at(-1),r.w.at(-2)))}">${pc(pct(r.w.at(-1),r.w.at(-2)))}</td></tr>`).join("")}
      <tr class="sub"><td>Общий итог</td>${ms.map(x=>`<td>${mF(mv(x,ALL))}</td>`).join("")}<td>${pc(pct(mv(m,ALL),mv(m-1,ALL)))}</td></tr>
@@ -611,9 +613,15 @@ function renderDeal(){
      {label:"Средний конкурент локации",data:roll([1,2,3,4,5,6,7],7),borderColor:css("--gray"),backgroundColor:css("--gray"),borderWidth:2,pointRadius:0,tension:.25}]},o)}
 }
 
+// итоговые столбцы («Итого», «Общий итог», «Итог …») — по шапке с учётом colspan/rowspan
+function markTotals(){document.querySelectorAll("#pane table").forEach(tb=>{const th=tb.tHead;if(!th)return;const occ=[],cols=new Set();
+  [...th.rows].forEach((tr,ri)=>{occ[ri]=occ[ri]||[];let c=0;for(const cell of tr.cells){while(occ[ri][c])c++;const cs=cell.colSpan||1,rs=cell.rowSpan||1;
+    if(/^\s*(Итого|Общий итог|Итог)/.test(cell.textContent))for(let k=0;k<cs;k++)cols.add(c+k);
+    for(let r=0;r<rs;r++){occ[ri+r]=occ[ri+r]||[];for(let k=0;k<cs;k++)occ[ri+r][c+k]=1}c+=cs}});
+  if(!cols.size)return;for(const b of tb.tBodies)for(const tr of b.rows){let c=0;for(const cell of tr.cells){if(cols.has(c))cell.classList.add("totc");c+=cell.colSpan||1}}})}
 function renderBest(){}
 
-function bindChips(){
+function bindChips(){markTotals();
   document.querySelectorAll("details[data-det]").forEach(x=>x.addEventListener("toggle",()=>{S.det[x.dataset.det]=x.open}));
   document.querySelectorAll("[data-chip]").forEach(g=>g.querySelectorAll("button").forEach(b=>b.onclick=()=>{const k=g.dataset.chip;S[k]=isNaN(+b.dataset.v)?b.dataset.v:+b.dataset.v;render()}));
   document.querySelectorAll("[data-sel]").forEach(s=>s.onchange=()=>{const k=s.dataset.sel;S[k]=k==="card"?+s.value:s.value;render()})}
