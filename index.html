@@ -441,7 +441,7 @@ function renderExp(){
     const cheaper=sel.filter(x=>x.p&&x.d.ppm<me.ppm).map(x=>x.e.lab),dearer=sel.filter(x=>x.p&&x.d.ppm>me.ppm).map(x=>x.e.lab);
     const projs=ENTS.filter(e=>e.p===0||rl.some(e.f));
     const bks=[...new Set(rl.map(r=>bk5(r[3])))].sort((a,b)=>a-b).filter(b=>bksB.includes(b)||rl.filter(r=>bk5(r[3])===b&&r[0]!==0).length);
-    const tone=d=>d==null?"":d>=10?"w3":d>=5?"w2":d>=1?"w1":d<=-10?"c3":d<=-5?"c2":d<=-1?"c1":"";
+    const tone=d=>d==null?"":d<=-10?"w3":d<=-5?"w2":d<=-1?"w1":d>=10?"c3":d>=5?"c2":d>=1?"c1":""; // красным — конкурент дешевле (мы проигрываем в цене), голубым — дороже
     let tm=`<thead><tr><th>Площадь</th>${projs.map(e=>`<th class="${e.p===0?"own-h":""}">${e.lab}</th>`).join("")}<th>Конкуренты в среднем</th></tr></thead><tbody>`;
     for(const b of bks){const m0=cell(OWN,b);
       tm+=`<tr class="${b===S.cmpB?"selrow":""}"><td>${bkL(b)}</td>`+projs.map(e=>{const x=cell(e,b);if(!x.n)return"<td></td>";const dv=e.p&&m0.n?pct(x.ppm,m0.ppm):null;
@@ -456,7 +456,7 @@ function renderExp(){
         dearer.length||cheaper.length?`Дороже Бестселлера: ${dearer.join(", ")||"—"}; дешевле: ${cheaper.join(", ")||"—"}`:""].filter(Boolean)):""}
       <div><div class="ct">${RN[S.cmpRoom]} ${bkL(S.cmpB)}: цена м², средний бюджет и средняя площадь<small>столбец — цена м², над ним — цена (тыс. ₽) и бюджет (млн ₽), плашка — средняя площадь, м²</small></div><div class="chart tall"><canvas id="e11"></canvas></div></div>
       <div><div class="ct">${RN[S.cmpRoom]}: цена м², тыс. ₽, по диапазонам площади<small>в ячейке — цена м², отклонение от Бестселлера в том же диапазоне, средний бюджет и число лотов</small></div>
-       <div class="legend"><span><span class="sw" style="background:var(--c3)"></span>дешевле на 10% и больше</span><span><span class="sw" style="background:var(--c1)"></span>дешевле на 1–5%</span><span><span class="sw" style="background:var(--w1)"></span>дороже на 1–5%</span><span><span class="sw" style="background:var(--w3)"></span>дороже на 10% и больше</span></div>
+       <div class="legend"><span><span class="sw" style="background:var(--w3)"></span>конкурент дешевле на 10% и больше</span><span><span class="sw" style="background:var(--w1)"></span>дешевле на 1–5%</span><span><span class="sw" style="background:var(--c1)"></span>дороже на 1–5%</span><span><span class="sw" style="background:var(--c3)"></span>дороже на 10% и больше</span></div>
        <div class="tbl"><table class="mtx">${tm}</table></div></div>`);
     cmpDraw=()=>{const o=opts({hideY:true,padTop:44,tip:c=>{const x=sel[c.dataIndex].d;return" "+f0(x.ppm)+" ₽/м² · бюджет "+f2(x.bud/1e6)+" млн ₽ · "+f1(x.ar)+" м² · "+x.n+" лот."}});
       o.plugins.datalabels={labels:{v:{anchor:"end",align:"end",offset:2,textAlign:"center",formatter:(v,c)=>[f0(v/1000)+" тыс.",f1(sel[c.dataIndex].d.bud/1e6)+" млн"],color:c=>sel[c.dataIndex].p===0?css("--own"):css("--ink"),font:{family:css("--font"),weight:"700",size:12}},a:boxDL(sel.map(x=>x.d.ar),f1)}};
