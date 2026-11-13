@@ -415,7 +415,7 @@ function renderExp(){
   h+=slide("Бестселлер против рынка в динамике","последние 12 месяцев",
    `<div class="cols"><div><div class="ct">Средневзвешенная цена м², тыс. руб</div><div class="chart"><canvas id="e10a"></canvas></div></div>
      <div><div class="ct">Средняя площадь лота, м²</div><div class="chart"><canvas id="e10b"></canvas></div></div></div>
-    ${legend([["Бестселлер",css("--red")],["Издание + Level",css("--navy")],["Конкуренты всей локации",css("--gray")]])}`);
+    ${legend([["Бестселлер",css("--red")],["Издание + Level",css("--ink")],["Конкуренты всей локации",css("--gray")]])}`);
 
   /* 11. Итоговое сравнение лотов с шагом 5 м² */
   const cmpOwn=E(s,[0]),cmpAll=E(s,ALL),bk5=a=>Math.floor(a/5)*5;
@@ -494,7 +494,7 @@ function renderExp(){
    mk("e9","bar",{labels:ch.map(x=>[...splitL(P[x.p]),FN[x.f]]),datasets:[{label:hasPrev?mL(snapM(ps)):"",data:ch.map(x=>x.pv),backgroundColor:css("--light"),borderRadius:2,maxBarThickness:26},
      {label:mL(snapM(s)),data:ch.map(x=>x.c),backgroundColor:ch.map(x=>projCol(x.p)),borderRadius:2,maxBarThickness:26}]},o)}
   for(const [id,key,fm] of [["e10a","ppm",v=>f0(v/1000)],["e10b","ar",f1]]){
-    const ser=[[ [0],css("--red"),"Бестселлер",3],[[4,5],css("--navy"),"Издание + Level",2],[[1,2,3,4,5,6,7],css("--gray"),"Конкуренты всей локации",2]];
+    const ser=[[ [0],css("--red"),"Бестселлер",3],[[4,5],css("--ink"),"Издание + Level",2],[[1,2,3,4,5,6,7],css("--gray"),"Конкуренты всей локации",2]];
     const o=opts({yfmt:fm,tip:c=>" "+c.dataset.label+": "+fm(c.parsed.y),autoSkip:true});o.plugins.tooltip.mode="index";o.interaction={mode:"index",intersect:false};o.scales.y.beginAtZero=false;
     o.plugins.datalabels={display:c=>c.datasetIndex===0&&(c.dataIndex===c.dataset.data.length-1),align:"top",formatter:fm,color:css("--red"),font:{family:css("--font"),weight:"700"}};
     mk(id,"line",{labels:L,datasets:ser.map(([ps_,c,l,w])=>({label:l,data:idx.map(i=>{const d=ag(E(i,ps_));return d.n?d[key]:null}),borderColor:c,backgroundColor:c,borderWidth:w,pointRadius:w>2?3:0,tension:.25,spanGaps:false}))},o)}
