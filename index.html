@@ -438,7 +438,7 @@ function renderExp(){
     // Квартал Издание делим на очереди по заявленной дате РВЭ (лоты без даты — к 1-й очереди)
     const rveQ=[...new Set(PRICE.filter(r=>r[0]===4&&r[1]===s&&r[8]>0).map(r=>r[8]))].sort((a,b)=>a-b);
     const ENTS=ALL.flatMap(p=>p===4&&rveQ.length>1?rveQ.map((q,i)=>({p:4,lab:`Квартал Издание, ${i+1} оч`,f:r=>r[0]===4&&(r[8]===q||(i===0&&!(r[8]>0)))})):[{p,lab:P[p],f:r=>r[0]===p}]);
-    const OWN=ENTS[0];
+    const OWN=ENTS[0];const finE=e=>e.p===3?"Под чистовую / С отделкой":[...new Set(E(s,[e.p]).filter(e.f).map(r=>r[6]).filter(x=>x>=0))].sort().map(i=>FN[i].toLowerCase()).join(" и ").replace(/^./,c=>c.toUpperCase());
     const cell=(e,b)=>ag(rl.filter(r=>e.f(r)&&bk5(r[3])===b));
     const bkL=b=>`${b}–${b+5} м²`;
     const sel=ENTS.map(e=>({e,p:e.p,d:cell(e,S.cmpB)})).filter(x=>x.d.n).sort((a,b)=>b.d.ppm-a.d.ppm);
@@ -448,7 +448,7 @@ function renderExp(){
     const projs=ENTS.filter(e=>e.p===0||rl.some(e.f));
     const bks=[...new Set(rl.map(r=>bk5(r[3])))].sort((a,b)=>a-b).filter(b=>bksB.includes(b)||rl.filter(r=>bk5(r[3])===b&&r[0]!==0).length);
     const tone=d=>d==null?"":d<=-10?"w3":d<=-5?"w2":d<=-1?"w1":d>=10?"c3":d>=5?"c2":d>=1?"c1":""; // красным — конкурент дешевле (мы проигрываем в цене), голубым — дороже
-    let tm=`<thead><tr><th>Площадь</th>${projs.map(e=>`<th class="${e.p===0?"own-h":""}">${e.lab}</th>`).join("")}<th>Конкуренты в среднем</th></tr></thead><tbody>`;
+    let tm=`<thead><tr><th>Площадь</th>${projs.map(e=>`<th class="${e.p===0?"own-h":""}">${e.lab}<br><small class="fin">${finE(e)}</small></th>`).join("")}<th>Конкуренты в среднем</th></tr></thead><tbody>`;
     for(const b of bks){const m0=cell(OWN,b);
       tm+=`<tr class="${b===S.cmpB?"selrow":""}"><td>${bkL(b)}</td>`+projs.map(e=>{const x=cell(e,b);if(!x.n)return"<td></td>";const dv=e.p&&m0.n?pct(x.ppm,m0.ppm):null;
         return`<td class="cell ${e.p===0?"own-c":tone(dv)}"><b>${f0(x.ppm/1000)}</b>${dv!=null?` <span class="dv">${pc(dv)}</span>`:""}<span class="sm">${f1(x.bud/1e6)} млн · ${x.n} лот.</span></td>`}).join("");
@@ -466,7 +466,7 @@ function renderExp(){
        <div class="tbl"><table class="mtx">${tm}</table></div></div>`);
     cmpDraw=()=>{const o=opts({hideY:true,padTop:44,tip:c=>{const x=sel[c.dataIndex].d;return" "+f0(x.ppm)+" ₽/м² · бюджет "+f2(x.bud/1e6)+" млн ₽ · "+f1(x.ar)+" м² · "+x.n+" лот."}});
       o.plugins.datalabels={labels:{v:{anchor:"end",align:"end",offset:2,textAlign:"center",formatter:(v,c)=>[f0(v/1000)+" тыс.",f1(sel[c.dataIndex].d.bud/1e6)+" млн"],color:c=>sel[c.dataIndex].p===0?css("--own"):css("--ink"),font:{family:css("--font"),weight:"700",size:12}},a:boxDL(sel.map(x=>x.d.ar),f1)}};
-      mk("e11","bar",{labels:sel.map(x=>[...splitL(x.e.lab),x.d.n+" лот."]),datasets:[{data:sel.map(x=>x.d.ppm),backgroundColor:sel.map(x=>projCol(x.p)),borderRadius:4,maxBarThickness:54}]},o)};
+      mk("e11","bar",{labels:sel.map(x=>[...splitL(x.e.lab),finE(x.e).toLowerCase(),x.d.n+" лот."]),datasets:[{data:sel.map(x=>x.d.ppm),backgroundColor:sel.map(x=>projCol(x.p)),borderRadius:4,maxBarThickness:54}]},o)};
   }
 
   pane.innerHTML=h;bindChips();kill();
@@ -594,7 +594,7 @@ function renderDeal(){
   let dcmpDraw=null;
   {const per=S.dcPer,f=m-per+1,bk5=a=>Math.floor(a/5)*5,bkL=b=>`${b}–${b+5} м²`;
    const rows=D(f,m,ALL).filter(r=>r[4]>0&&r[5]>0),own=rows.filter(r=>r[0]===0);
-   const perL=`${mL(f)}–${mL(m)}`,perChips=chips("dcPer",[[3,"3 мес"],[6,"6 мес"],[12,"12 мес"]],per);
+   const perL=`${mL(f)}–${mL(m)}`,perChips=chips("dcPer",[[1,"1 мес"],[3,"3 мес"],[6,"6 мес"],[12,"12 мес"]],per);
    const tone=d=>d==null?"":d<=-10?"w3":d<=-5?"w2":d<=-1?"w1":d>=10?"c3":d>=5?"c2":d>=1?"c1":"";
    const legendT=`<div class="legend"><span><span class="sw" style="background:var(--w3)"></span>конкурент дешевле на 10% и больше</span><span><span class="sw" style="background:var(--w1)"></span>дешевле на 1–5%</span><span><span class="sw" style="background:var(--c1)"></span>дороже на 1–5%</span><span><span class="sw" style="background:var(--c3)"></span>дороже на 10% и больше</span></div>`;
    const cellH=(x,dv,isOwn)=>`<td class="cell ${isOwn?"own-c":tone(dv)}"><b>${f0(x.ppm/1000)}</b>${dv!=null?` <span class="dv">${pc(dv)}</span>`:""}<span class="sm">${f1(x.bud/1e6)} млн · ${x.n} сд.</span></td>`;
@@ -614,7 +614,7 @@ function renderDeal(){
    const bT0=B0.n/per,cT0=comps.length?C0.n/per/comps.length:0,bE0=expo([0]),cE0=comps.length?expo(comps)/comps.length:0;
    const nt=[`За ${perL}: у Бестселлера ${B0.n} сделок (${f1(bT0)} в месяц), у среднего конкурента ${f1(cT0)} в месяц — в ${f1(cT0/(bT0||1))} раза больше.`,
      B0.n&&C0.n?`Цена м² в сделках: Бестселлер ${f0(B0.ppm/1000)} тыс. ₽, конкуренты ${f0(C0.ppm/1000)} тыс. ₽ (${pc(pct(B0.ppm,C0.ppm))}); бюджет ${f1(B0.bud/1e6)} против ${f1(C0.bud/1e6)} млн ₽.`:"",
-     bE0&&cE0?`Экспозиция: у Бестселлера ${bE0} лотов, у среднего конкурента ${f0(cE0)}; в месяц продаётся ${f0(bT0/bE0*100)}% экспозиции Бестселлера против ${f0(cT0/cE0*100)}% у конкурентов.`:""].filter(Boolean);
+     `Отделка: ${[0,...comps].map(p=>P[p]+" — "+finTxt(p).toLowerCase()).join("; ")}.`,bE0&&cE0?`Экспозиция: у Бестселлера ${bE0} лотов, у среднего конкурента ${f0(cE0)}; в месяц продаётся ${f0(bT0/bE0*100)}% экспозиции Бестселлера против ${f0(cT0/cE0*100)}% у конкурентов.`:""].filter(Boolean);
    h+=slide("Сделки: Бестселлер против конкурентов по комнатности",`${perL} · ${tn} · площадь приведённая`,
      `${note(nt)}<div class="tbl">${sumTbl}</div>
       <div class="foot">Темп конкурентов — на один проект с продажами в периоде. «Продаётся в месяц от экспозиции» = сделок в месяц / лотов в экспозиции на срез ${sDate(sIdx)}: если цены схожи, а эта доля у Бестселлера ниже, причина скорее не в цене (локация, продукт, узнаваемость, канал продаж).</div>`,perChips);
@@ -628,7 +628,7 @@ function renderDeal(){
      const projs=ALL.filter(p=>p===0||rl.some(r=>r[0]===p));
      const cell=(p,b)=>dag(rl.filter(r=>r[0]===p&&bk5(r[4])===b));
      const bks=[...new Set(rl.map(r=>bk5(r[4])))].sort((a,b)=>a-b);
-     let tm=`<thead><tr><th>Площадь</th>${projs.map(p=>`<th class="${p===0?"own-h":""}">${P[p]}</th>`).join("")}<th>Конкуренты в среднем</th></tr></thead><tbody>`;
+     let tm=`<thead><tr><th>Площадь</th>${projs.map(p=>`<th class="${p===0?"own-h":""}">${P[p]}<br><small class="fin">${finTxt(p)}</small></th>`).join("")}<th>Конкуренты в среднем</th></tr></thead><tbody>`;
      for(const b of bks){const m0=cell(0,b);
        tm+=`<tr class="${b===S.dcB?"selrow":""}"><td>${bkL(b)}</td>`+projs.map(p=>{const x=cell(p,b);if(!x.n)return"<td></td>";return cellH(x,p&&m0.n?pct(x.ppm,m0.ppm):null,p===0)}).join("");
        const c=dag(rl.filter(r=>r[0]!==0&&bk5(r[4])===b));tm+=c.n?cellH(c,m0.n?pct(c.ppm,m0.ppm):null,false)+"</tr>":"<td></td></tr>"}
@@ -646,7 +646,7 @@ function renderDeal(){
         <div class="tbl"><table class="mtx">${tm}</table></div></div>`,perChips);
      dcmpDraw=()=>{const o=opts({hideY:true,padTop:44,tip:c=>{const x=sel[c.dataIndex].d;return" "+f0(x.ppm)+" ₽/м² · бюджет "+f2(x.bud/1e6)+" млн ₽ · "+f1(x.ar)+" м² · "+x.n+" сд."}});
        o.plugins.datalabels={labels:{v:{anchor:"end",align:"end",offset:2,textAlign:"center",formatter:(v,c)=>[f0(v/1000)+" тыс.",f1(sel[c.dataIndex].d.bud/1e6)+" млн"],color:c=>sel[c.dataIndex].p===0?css("--own"):css("--ink"),font:{family:css("--font"),weight:"700",size:12}},a:boxDL(sel.map(x=>x.d.ar),f1)}};
-       mk("d9","bar",{labels:sel.map(x=>[...splitL(P[x.p]),x.d.n+" сд."]),datasets:[{data:sel.map(x=>x.d.ppm),backgroundColor:sel.map(x=>projCol(x.p)),borderRadius:4,maxBarThickness:54}]},o)};
+       mk("d9","bar",{labels:sel.map(x=>[...splitL(P[x.p]),finTxt(x.p).toLowerCase(),x.d.n+" сд."]),datasets:[{data:sel.map(x=>x.d.ppm),backgroundColor:sel.map(x=>projCol(x.p)),borderRadius:4,maxBarThickness:54}]},o)};
    }}
 
   pane.innerHTML=h;bindChips();kill();
