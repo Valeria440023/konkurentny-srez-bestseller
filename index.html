@@ -357,7 +357,7 @@ function renderExp(){
   const rmPrice=ps_=>[0,1,2,3,4].map(i=>ag(E(s,ps_).filter(r=>r[2]===i)));
   h+=slide("Цена экспозиции",date,
    `<div class="tbl"><table><thead><tr><th></th><th>Вся локация</th><th>Прирост за мес, %</th><th>Локация Перово</th><th>Прирост за мес, %</th><th>Бестселлер</th><th>Прирост за мес, %</th></tr></thead><tbody>
-    ${[["Средняя стоимость м2","ppm",v=>f0(v)+" руб/м2"],["Средний бюджет покупки","bud",v=>f2(v/1e6)+" млн руб"],["Средняя площадь экспозиции","ar",v=>f0(v)+" м2"]].map(([l,k,fm])=>
+    ${[["Средняя стоимость м2","ppm",v=>f0(v)+" руб/м2"],["Средний бюджет покупки","bud",v=>f2(v/1e6)+" млн руб"],["Средняя площадь экспозиции","ar",v=>f1(v)+" м2"]].map(([l,k,fm])=>
       `<tr><td>${l}</td><td>${fm(A[k])}</td><td class="${cls(pct(A[k],Ap?.[k]))}">${pc(pct(A[k],Ap?.[k]))}</td><td>${fm(Pe[k])}</td><td class="${cls(pct(Pe[k],Pp?.[k]))}">${pc(pct(Pe[k],Pp?.[k]))}</td><td>${B.n?fm(B[k]):"—"}</td><td class="${cls(pct(B[k],Bp?.[k]))}">${B.n&&Bp?.n?pc(pct(B[k],Bp[k])):""}</td></tr>`).join("")}</tbody></table></div>
     <div class="cols"><div><div class="ct">Средняя площадь лота на экспозиции и средневзвешенная цена за 1 м², руб<small>Вся локация</small></div><div class="chart"><canvas id="e6a"></canvas></div></div>
      <div><div class="ct">Средняя площадь лота на экспозиции и средневзвешенная цена за 1 м², руб<small>Локация Перово</small></div><div class="chart"><canvas id="e6b"></canvas></div></div></div>
@@ -375,7 +375,7 @@ function renderExp(){
 
   /* 8. Таблица цены по отделке и комнатности */
   let t8=`<thead><tr><th rowspan="2">Название ЖК</th><th rowspan="2">РВЭ</th>${RN.map(r=>`<th colspan="2" style="text-align:center">${r}</th>`).join("")}<th rowspan="2">Итог ср. площадь, м2</th><th rowspan="2">Итог цена, руб/м2</th><th rowspan="2">Прирост за мес, %</th></tr><tr>${RN.map(()=>"<th>Площ.</th><th>руб/м2</th>").join("")}</tr></thead><tbody>`;
-  const row8=(lab,rows,prevRows,c,rv)=>{const t=ag(rows),tp=prevRows?ag(prevRows):null;return`<tr class="${c}"><td>${lab}</td><td>${rv?xlM(rv):""}</td>${[0,1,2,3,4].map(i=>{const d=ag(rows.filter(r=>r[2]===i));return`<td>${d.n?f0(d.ar):""}</td><td>${d.n?f0(d.ppm):""}</td>`}).join("")}<td>${f0(t.ar)}</td><td>${f0(t.ppm)}</td><td class="${cls(pct(t.ppm,tp?.ppm))}">${tp&&tp.n?pc(pct(t.ppm,tp.ppm)):""}</td></tr>`};
+  const row8=(lab,rows,prevRows,c,rv)=>{const t=ag(rows),tp=prevRows?ag(prevRows):null;return`<tr class="${c}"><td>${lab}</td><td>${rv?xlM(rv):""}</td>${[0,1,2,3,4].map(i=>{const d=ag(rows.filter(r=>r[2]===i));return`<td>${d.n?f1(d.ar):""}</td><td>${d.n?f0(d.ppm):""}</td>`}).join("")}<td>${f1(t.ar)}</td><td>${f0(t.ppm)}</td><td class="${cls(pct(t.ppm,tp?.ppm))}">${tp&&tp.n?pc(pct(t.ppm,tp.ppm)):""}</td></tr>`};
   for(const f of [0,1,2]){const rows=E(s,ALL).filter(r=>r[6]===f);if(!rows.length)continue;t8+=row8(FN[f]+" — итог",rows,hasPrev?E(ps,ALL).filter(r=>r[6]===f):null,"sub");
     for(const x of prj){const rr=E(s,[x.p]).filter(r=>r[6]===f&&(x.p!==4||r[8]===x.q));if(!rr.length)continue;t8+=row8(x.lab,rr,hasPrev?E(ps,[x.p]).filter(r=>r[6]===f&&(x.p!==4||r[8]===x.q)):null,x.p===0?"me":"",x.q)}}
   t8+=row8("Общий итог",E(s,ALL),hasPrev?E(ps,ALL):null,"tot")+"</tbody>";
@@ -478,11 +478,11 @@ function renderExp(){
   donut("e5a",RN,rmA,[0,1,2,3,4].map(roomCol));donut("e5b",RN,rmP,[0,1,2,3,4].map(roomCol));
   {const o=opts({hideY:true});o.plugins.datalabels=DL(v=>v,{size:11});o.plugins.tooltip.mode="index";
    mk("e5c","bar",{labels:rmT.map(r=>splitL(P[r.p])),datasets:[0,1,2,3,4].map(i=>({label:RN[i],data:rmT.map(r=>r.v[i]||null),backgroundColor:roomCol(i),borderRadius:2,maxBarThickness:18}))},o)}
-  for(const [id,ps_] of [["e6a",ALL],["e6b",PER]]){const d=rmPrice(ps_);const o=opts({hideY:true,tip:c=>" "+f0(c.parsed.y)+" руб/м2 · ср. площадь "+f0(d[c.dataIndex].ar)+" м2"});
+  for(const [id,ps_] of [["e6a",ALL],["e6b",PER]]){const d=rmPrice(ps_);const o=opts({hideY:true,tip:c=>" "+f0(c.parsed.y)+" руб/м2 · ср. площадь "+f1(d[c.dataIndex].ar)+" м2"});
     o.plugins.datalabels={labels:{v:DL(f0),a:boxDL(d.map(x=>x.n?x.ar:null),f1)}};
     mk(id,"bar",{labels:RS,datasets:[{data:d.map(x=>x.ppm),backgroundColor:[0,1,2,3,4].map(roomCol),borderRadius:3,maxBarThickness:46}]},o)}
   for(const [id,arr,key,fm] of [["e7a",byP,"ppm",f0],["e7b",byB,"bud",v=>f2(v/1e6)+" млн"]]){
-    const o=opts({hideY:true,tip:c=>" "+fm(arr[c.dataIndex].d[key])+(key==="ppm"?" руб/м2":"")+" · "+f0(arr[c.dataIndex].d.ar)+" м2 · "+arr[c.dataIndex].d.n+" лотов"});
+    const o=opts({hideY:true,tip:c=>" "+fm(arr[c.dataIndex].d[key])+(key==="ppm"?" руб/м2":"")+" · "+f1(arr[c.dataIndex].d.ar)+" м2 · "+arr[c.dataIndex].d.n+" лотов"});
     o.plugins.datalabels={labels:{v:DL(fm),a:boxDL(arr.map(x=>x.d.ar),f1)}};
     mk(id,"bar",{labels:arr.map(x=>[...splitL(x.lab),x.q?xlS(x.q):""]),datasets:[{data:arr.map(x=>x.d[key]),backgroundColor:arr.map(x=>projCol(x.p)),borderRadius:3,maxBarThickness:46}]},o)}
   {const o=opts({hideY:true,padTop:26});o.plugins.tooltip.mode="index";o.plugins.tooltip.callbacks.afterBody=it=>"Прирост: "+pc(ch[it[0].dataIndex].d,1);
