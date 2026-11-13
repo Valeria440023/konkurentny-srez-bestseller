@@ -438,7 +438,7 @@ function renderExp(){
     // Квартал Издание делим на очереди по заявленной дате РВЭ (лоты без даты — к 1-й очереди)
     const rveQ=[...new Set(PRICE.filter(r=>r[0]===4&&r[1]===s&&r[8]>0).map(r=>r[8]))].sort((a,b)=>a-b);
     const ENTS=ALL.flatMap(p=>p===4&&rveQ.length>1?rveQ.map((q,i)=>({p:4,lab:`Квартал Издание, ${i+1} оч`,f:r=>r[0]===4&&(r[8]===q||(i===0&&!(r[8]>0)))})):[{p,lab:P[p],f:r=>r[0]===p}]);
-    const OWN=ENTS[0];const finE=e=>e.p===3?"Под чистовую / С отделкой":[...new Set(E(s,[e.p]).filter(e.f).map(r=>r[6]).filter(x=>x>=0))].sort().map(i=>FN[i].toLowerCase()).join(" и ").replace(/^./,c=>c.toUpperCase());
+    const OWN=ENTS[0];const finE=e=>e.p===3||e.p===0?"Под чистовую / С отделкой":[...new Set(E(s,[e.p]).filter(e.f).map(r=>r[6]).filter(x=>x>=0))].sort().map(i=>FN[i].toLowerCase()).join(" и ").replace(/^./,c=>c.toUpperCase());
     const cell=(e,b)=>ag(rl.filter(r=>e.f(r)&&bk5(r[3])===b));
     const bkL=b=>`${b}–${b+5} м²`;
     const sel=ENTS.map(e=>({e,p:e.p,d:cell(e,S.cmpB)})).filter(x=>x.d.n).sort((a,b)=>b.d.ppm-a.d.ppm);
@@ -547,7 +547,7 @@ function renderDeal(){
      <tr class="tot"><td>Локация Перово</td>${ms.map(x=>`<td>${mF(mv(x,PER))}</td>`).join("")}<td>${pc(pct(mv(m,PER),mv(m-1,PER)))}</td></tr></tbody></table></div>`);
 
   /* 3. Профиль сделок */
-  const pf=m-S.prof+1;const FS=["без","чист.","отд."];const finTxt=p=>{if(p===3)return"Под чистовую / С отделкой";const sn=[...SNAPS.keys()].filter(i=>snapM(i)<=m&&PRICE.some(r=>r[0]===p&&r[1]===i)).pop()??[...SNAPS.keys()].filter(i=>PRICE.some(r=>r[0]===p&&r[1]===i)).pop();const set=new Set(PRICE.filter(r=>r[0]===p&&r[1]===sn&&r[6]>=0).map(r=>r[6]));return[...set].sort().map(i=>FN[i].toLowerCase()).join(" и ").replace(/^./,c=>c.toUpperCase())};
+  const pf=m-S.prof+1;const FS=["без","чист.","отд."];const finTxt=p=>{if(p===3||p===0)return"Под чистовую / С отделкой";   // Бестселлер и Аквилон: отделка — опцияconst sn=[...SNAPS.keys()].filter(i=>snapM(i)<=m&&PRICE.some(r=>r[0]===p&&r[1]===i)).pop()??[...SNAPS.keys()].filter(i=>PRICE.some(r=>r[0]===p&&r[1]===i)).pop();const set=new Set(PRICE.filter(r=>r[0]===p&&r[1]===sn&&r[6]>=0).map(r=>r[6]));return[...set].sort().map(i=>FN[i].toLowerCase()).join(" и ").replace(/^./,c=>c.toUpperCase())};
   const PS=["Бестселлер","Плеханова 11","Баланс","Аквилон 2.0","Издание","Level","District 39","MYPRIORITY"];
   const cols=ALL.filter(p=>p===0||D(pf,m,[p]).length);const colsAll=[...cols.map(p=>[p]),ALL];
   const cellR=(ps,i,fn)=>{const rows=D(pf,m,ps).filter(r=>i==null||r[3]===i);return rows.length?fn(dag(rows)):""};
