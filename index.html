@@ -229,7 +229,7 @@ const xlS=n=>{const d=xl(n);return String(d.getUTCDate()).padStart(2,"0")+"."+St
 const xlM=n=>{const d=xl(n);return MN[d.getUTCMonth()]+"."+String(d.getUTCFullYear()).slice(2)};
 const LASTM=(d=>(+d[2]-2024)*12+(+d[1]-1)-1)("12.11.2026".split(".")); // последний полный месяц сделок = месяц до выгрузки
 const PART=x=>x===LASTM?`неполный месяц: в выгрузке договоры по ${typeof DMAX!=="undefined"?DMAX:"~3-ю неделю"} (≈3 недели), месяц дорастёт по мере регистрации договоров`:"";
-const S={det:{},cmpRoom:-1,cmpB:-1,bPer:"all",tab:"exp",dMet:"n",dcPer:12,dcRoom:-1,dcB:-1,morScope:"all",snap:SNAPS.length-1,mon:LASTM,otype:0,unit:"n",dScope:"all",prof:3,card:0,mScope:"all"};
+const S={det:{},cmpRoom:-1,cmpB:-1,bPer:"all",tab:"exp",dMet:"n",dcPer:3,dcRoom:-1,dcB:-1,morScope:"all",snap:SNAPS.length-1,mon:LASTM,otype:0,unit:"n",dScope:"all",prof:3,card:0,mScope:"all"};
 try{const v=localStorage.getItem("bs2-tab");if(v==="deal"||v==="best"||v==="sum")S.tab=v}catch(e){}if(location.hash==="#summary")S.tab="sum";if(location.hash==="#deals")S.tab="deal";if(location.hash==="#sales")S.tab="best";if(!SHOW_BEST&&S.tab==="best")S.tab="exp";if(location.hash==="#exposure")S.tab="exp";
 const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 const f0=v=>v==null||!isFinite(v)?"":Math.round(v).toLocaleString("ru-RU");
