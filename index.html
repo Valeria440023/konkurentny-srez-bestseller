@@ -225,7 +225,7 @@ const xl=n=>{const d=new Date(Date.UTC(1899,11,30)+n*864e5);return d};
 const xlS=n=>{const d=xl(n);return String(d.getUTCDate()).padStart(2,"0")+"."+String(d.getUTCMonth()+1).padStart(2,"0")+"."+d.getUTCFullYear()};
 const xlM=n=>{const d=xl(n);return MN[d.getUTCMonth()]+"."+String(d.getUTCFullYear()).slice(2)};
 const LASTM=(d=>(+d[2]-2024)*12+(+d[1]-1)-1)("12.11.2026".split(".")); // последний полный месяц сделок = месяц до выгрузки
-const S={det:{},cmpRoom:-1,cmpB:-1,bPer:"all",tab:"exp",dMet:"n",dcPer:12,dcRoom:-1,dcB:-1,snap:SNAPS.length-1,mon:LASTM,otype:0,unit:"n",dScope:"all",prof:3,card:0,mScope:"all"};
+const S={det:{},cmpRoom:-1,cmpB:-1,bPer:"all",tab:"exp",dMet:"n",dcPer:12,dcRoom:-1,dcB:-1,morScope:"all",snap:SNAPS.length-1,mon:LASTM,otype:0,unit:"n",dScope:"all",prof:3,card:0,mScope:"all"};
 try{const v=localStorage.getItem("bs2-tab");if(v==="deal"||v==="best")S.tab=v}catch(e){}if(location.hash==="#deals")S.tab="deal";if(location.hash==="#sales")S.tab="best";if(!SHOW_BEST&&S.tab==="best")S.tab="exp";if(location.hash==="#exposure")S.tab="exp";
 const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 const f0=v=>v==null||!isFinite(v)?"":Math.round(v).toLocaleString("ru-RU");
@@ -570,12 +570,11 @@ function renderDeal(){
     ${legend([["Ср. площадь, м2 (плашка)",css("--red")],["руб/м2 и бюджет",css("--navy")]])}`,scopeSel("mScope",S.mScope));
 
   /* 5. Ипотека */
-  const m20=[...Array(12).keys()].map(i=>m-11+i).filter(x=>x>=0);const morA=m20.map(x=>dag(D(x,x,ALL)).mort);
+  const m20=[...Array(12).keys()].map(i=>m-11+i).filter(x=>x>=0);const [morPs,morL]=scopes[S.morScope]||scopes.all;const morD=m20.map(x=>dag(D(x,x,morPs))),morA=morD.map(x=>x.mort);
   const m15=[...Array(12).keys()].map(i=>m-11+i).filter(x=>x>=0);
   h+=slide(`Сделки. Доля ипотеки`,tn,
-   `${note([`Доля ипотеки в локации в ${mLong(m)} — ${f0(morA.at(-1))}% против ${f0(morA.at(-2))}% месяцем ранее`])}
-    <div><div class="ct">Доля ипотеки<small>Вся локация</small></div><div class="chart short"><canvas id="d5a"></canvas></div></div>
-    <div><div class="ct">Доля ипотеки в локации Перово<small>по проектам; пусто — сделок не было</small></div><div class="chart"><canvas id="d5b"></canvas></div>${legend([["Бестселлер",css("--red")],["Квартал Издание",css("--light")],["Левел Нижегородская",css("--navy")]])}</div>`);
+   `${note([`Доля ипотеки (${morL}) в ${mLong(m)} — ${morA.at(-1)==null?"сделок нет":f0(morA.at(-1))+"%"}, месяцем ранее — ${morA.at(-2)==null?"сделок нет":f0(morA.at(-2))+"%"}`])}
+    <div><div class="ct">Доля ипотеки<small>${morL}; пусто — сделок не было</small></div><div class="chart short"><canvas id="d5a"></canvas></div></div>`,scopeSel("morScope",S.morScope));
 
   /* 6. Ключевые конкуренты */
   const m20b=m20;const cd=m20b.map(x=>dag(D(x,x,[S.card])));
@@ -584,11 +583,6 @@ function renderDeal(){
     <div><div class="ct">${P[S.card]}: сделки, шт</div><div class="chart short"><canvas id="d6b"></canvas></div></div>`,
     `<select data-sel="card">${ALL.map(p=>`<option value="${p}"${p===S.card?" selected":""}>${P[p]}</option>`).join("")}</select>`);
 
-  /* 7. Темп продаж */
-  const m18=[...Array(12).keys()].map(i=>m-11+i).filter(x=>x>=2);
-  const roll=(ps,div)=>m18.map(x=>D(x-2,x,ps).length/3/div);
-  h+=slide(`Темп продаж: Бестселлер против конкурентов`,"скользящее среднее за 3 мес, сделок в месяц на проект",
-   `<div class="chart"><canvas id="d7"></canvas></div>${legend([["Бестселлер",css("--red")],["Средний проект Перово (Издание, Level)",css("--navy")],["Средний конкурент всей локации",css("--gray")]])}`);
 
   /* 9. Сравнение сделок лот к лоту: комнатность и шаг 5 м² + сводка «цена или что-то ещё» */
   let dcmpDraw=null;
@@ -660,21 +654,12 @@ function renderDeal(){
     o.plugins.datalabels={labels:{v:DL(fm,{size:11}),a:boxDL(dd.map(x=>x.n?x.ar:null),f1)}};
     mk(id,"bar",{labels:m14.map(mL),datasets:[{data:dd.map(x=>x.n?x[key]:null),backgroundColor:key==="ppm"?css("--navy"):css("--light"),borderRadius:3,maxBarThickness:40}]},o)}
   {const o=opts({hideY:true});o.plugins.datalabels={display:c=>c.dataset.data[c.dataIndex]!=null,anchor:"end",align:"start",offset:2,formatter:v=>f0(v)+"%",color:"#fff",backgroundColor:css("--red"),borderRadius:2,padding:{top:3,bottom:2,left:4,right:4},font:{family:css("--font"),weight:"700",size:11}};o.scales.y.max=100;
-   mk("d5a","bar",{labels:m20.map(mL),datasets:[{data:morA,backgroundColor:css("--navy"),borderRadius:2,maxBarThickness:30}]},o)}
-  {const o=opts({hideY:true});o.plugins.tooltip.mode="index";o.plugins.tooltip.callbacks.label=c=>{const p=[0,4,5][c.datasetIndex];const n=cnt(m15[c.dataIndex],[p]);return" "+c.dataset.label+": "+(c.parsed.y==null?"нет сделок":f0(c.parsed.y)+"% из "+n)};
-   o.plugins.datalabels=DL(v=>f0(v)+"%",{size:11,showZero:true});o.scales.y.max=115;
-   mk("d5b","bar",{labels:m15.map(mL),datasets:[[0,"--red"],[4,"--light"],[5,"--navy"]].map(([p,c])=>({label:P[p],data:m15.map(x=>dag(D(x,x,[p])).mort),backgroundColor:css(c),borderRadius:2,maxBarThickness:16}))},o)}
+   o.plugins.tooltip.callbacks.label=c=>{const x=morD[c.dataIndex];return x.n?" "+f0(x.mort)+"% · ипотека "+Math.round(x.mort*x.n/100)+" из "+x.n+" сделок":" сделок нет"};
+   mk("d5a","bar",{labels:m20.map(mL),datasets:[{data:morA,backgroundColor:morPs.length===1&&morPs[0]===0?css("--red"):css("--navy"),borderRadius:2,maxBarThickness:30}]},o)}
   {const o=opts({hideY:true,tip:c=>" "+f0(cd[c.dataIndex].ppm)+" руб/м2 · "+f1(cd[c.dataIndex].ar)+" м2 · "+cd[c.dataIndex].n+" сделок"});o.plugins.datalabels={labels:{v:DL(v=>f0(v/1000)+"k",{size:11}),a:boxDL(cd.map(x=>x.n?x.ar:null),f1)}};
    mk("d6a","bar",{labels:m20b.map(mL),datasets:[{data:cd.map(x=>x.n?x.ppm:null),backgroundColor:projCol(S.card)===css("--red")?css("--red"):css("--light"),borderRadius:3,maxBarThickness:34}]},o);
    const o2=opts({hideY:true});o2.plugins.datalabels=DL(v=>v,{size:11,showZero:true});
    mk("d6b","bar",{labels:m20b.map(mL),datasets:[{data:cd.map(x=>x.n),backgroundColor:css("--navy"),borderRadius:2,maxBarThickness:34}]},o2)}
-  {const o=opts({yfmt:v=>f1(v),tip:c=>" "+c.dataset.label+": "+f1(c.parsed.y)+" сделки/мес",autoSkip:true});o.plugins.tooltip.mode="index";o.interaction={mode:"index",intersect:false};
-   o.plugins.datalabels={display:c=>c.dataIndex===c.dataset.data.length-1,align:"right",offset:6,formatter:f1,color:c=>c.dataset.borderColor,font:{family:css("--font"),weight:"700"}};o.layout.padding.right=40;
-   const act=x=>Math.max(1,[1,2,3,6,7].filter(p=>D(x-2,x,[p]).length).length);
-   mk("d7","line",{labels:m18.map(mL),datasets:[
-     {label:"Бестселлер",data:roll([0],1),borderColor:css("--red"),backgroundColor:css("--red"),borderWidth:3,pointRadius:3,tension:.25},
-     {label:"Средний проект Перово",data:roll([4,5],2),borderColor:css("--navy"),backgroundColor:css("--navy"),borderWidth:2,pointRadius:0,tension:.25},
-     {label:"Средний конкурент локации",data:roll([1,2,3,4,5,6,7],7),borderColor:css("--gray"),backgroundColor:css("--gray"),borderWidth:2,pointRadius:0,tension:.25}]},o)}
 }
 
 // итоговые столбцы («Итого», «Общий итог», «Итог …») — по шапке с учётом colspan/rowspan
