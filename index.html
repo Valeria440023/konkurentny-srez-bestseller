@@ -220,7 +220,7 @@ const xl=n=>{const d=new Date(Date.UTC(1899,11,30)+n*864e5);return d};
 const xlS=n=>{const d=xl(n);return String(d.getUTCDate()).padStart(2,"0")+"."+String(d.getUTCMonth()+1).padStart(2,"0")+"."+d.getUTCFullYear()};
 const xlM=n=>{const d=xl(n);return MN[d.getUTCMonth()]+"."+String(d.getUTCFullYear()).slice(2)};
 const LASTM=(d=>(+d[2]-2024)*12+(+d[1]-1)-1)("12.11.2026".split(".")); // последний полный месяц сделок = месяц до выгрузки
-const S={det:{},cmpRoom:-1,cmpB:-1,bPer:"all",tab:"exp",snap:SNAPS.length-1,mon:LASTM,otype:0,unit:"n",dScope:"all",prof:3,card:0,mScope:"all"};
+const S={det:{},cmpRoom:-1,cmpB:-1,bPer:"all",tab:"exp",dMet:"n",snap:SNAPS.length-1,mon:LASTM,otype:0,unit:"n",dScope:"all",prof:3,card:0,mScope:"all"};
 try{const v=localStorage.getItem("bs2-tab");if(v==="deal"||v==="best")S.tab=v}catch(e){}if(location.hash==="#deals")S.tab="deal";if(location.hash==="#sales")S.tab="best";if(!SHOW_BEST&&S.tab==="best")S.tab="exp";if(location.hash==="#exposure")S.tab="exp";
 const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 const f0=v=>v==null||!isFinite(v)?"":Math.round(v).toLocaleString("ru-RU");
@@ -528,15 +528,17 @@ function renderDeal(){
 
   /* 2. Сделки за месяц по проектам + таблица */
   const ms=[...Array(12).keys()].map(i=>m-11+i).filter(x=>x>=0);
-  const pr=ALL.map(p=>({p,v:ms.map(x=>cnt(x,[p]))})).filter(r=>r.v.some(x=>x)||r.p===0).sort((a,b)=>b.v.at(-1)-a.v.at(-1)||b.v.reduce((x,y)=>x+y)-a.v.reduce((x,y)=>x+y));
+  const MET={n:["Сделки","шт",v=>v||""],ar:["Средняя площадь сделки","м²",v=>v==null?"":f1(v)],ppm:["Средняя цена м² в сделке","тыс. ₽",v=>v==null?"":f1(v)]},[mT,mU,mF]=MET[S.dMet];
+  const mv=(x,ps)=>{let rows=D(x,x,ps);if(S.dMet==="n")return rows.length;rows=rows.filter(r=>r[4]>0&&r[5]>0);if(!rows.length)return null;const g=dag(rows);return S.dMet==="ar"?g.ar:g.ppm/1000};
+  const pr=ALL.map(p=>({p,v:ms.map(x=>cnt(x,[p])),w:ms.map(x=>mv(x,[p]))})).filter(r=>r.v.some(x=>x)||r.p===0).sort((a,b)=>b.v.at(-1)-a.v.at(-1)||b.v.reduce((x,y)=>x+y)-a.v.reduce((x,y)=>x+y));
   const lead=[...pr].sort((a,b)=>b.v.at(-1)-a.v.at(-1));
-  h+=slide(`Сделки. ${mLong(m)}`,tn,
+  h+=slide(`Сделки. ${mLong(m)}`,tn+" · "+mT.toLowerCase(),
    `${note([`Лидер месяца — ${P[lead[0].p]} (${lead[0].v.at(-1)}), далее ${lead.slice(1,3).map(r=>P[r.p]+" ("+r.v.at(-1)+")").join(", ")}`,`Бестселлер: ${pr.find(r=>r.p===0).v.at(-1)} сделок в месяце, ${pr.find(r=>r.p===0).v.reduce((a,b)=>a+b)} за 12 мес`])}
-    <div class="cols"><div><div class="ct">Сделки за ${mLong(m)}, шт</div><div class="chart tall"><canvas id="d2"></canvas></div></div>
-    <div class="tbl"><table><thead><tr><th>Проект</th>${ms.map(x=>`<th>${mL(x)}</th>`).join("")}<th>Прирост за посл. месяц</th></tr></thead><tbody>
-     ${pr.map(r=>`<tr class="${r.p===0?"me":""}"><td>${P[r.p]}</td>${r.v.map(v=>`<td>${v||""}</td>`).join("")}<td class="${cls(pct(r.v.at(-1),r.v.at(-2)))}">${pc(pct(r.v.at(-1),r.v.at(-2)))}</td></tr>`).join("")}
-     <tr class="sub"><td>Общий итог</td>${ms.map(x=>`<td>${cnt(x,ALL)}</td>`).join("")}<td>${pc(pct(cnt(m,ALL),cnt(m-1,ALL)))}</td></tr>
-     <tr class="tot"><td>Локация Перово</td>${ms.map(x=>`<td>${cnt(x,PER)}</td>`).join("")}<td>${pc(pct(cnt(m,PER),cnt(m-1,PER)))}</td></tr></tbody></table></div></div>`);
+    <div><div class="ct">${mT} за ${mLong(m)}, ${mU}</div><div class="chart tall"><canvas id="d2"></canvas></div></div>
+    <div class="tbl" style="margin-top:16px"><table><thead><tr><th>Проект</th>${ms.map(x=>`<th>${mL(x)}</th>`).join("")}<th>Прирост за посл. месяц</th></tr></thead><tbody>
+     ${pr.map(r=>`<tr class="${r.p===0?"me":""}"><td>${P[r.p]}</td>${r.w.map(v=>`<td>${mF(v)}</td>`).join("")}<td class="${cls(pct(r.w.at(-1),r.w.at(-2)))}">${pc(pct(r.w.at(-1),r.w.at(-2)))}</td></tr>`).join("")}
+     <tr class="sub"><td>Общий итог</td>${ms.map(x=>`<td>${mF(mv(x,ALL))}</td>`).join("")}<td>${pc(pct(mv(m,ALL),mv(m-1,ALL)))}</td></tr>
+     <tr class="tot"><td>Локация Перово</td>${ms.map(x=>`<td>${mF(mv(x,PER))}</td>`).join("")}<td>${pc(pct(mv(m,PER),mv(m-1,PER)))}</td></tr></tbody></table></div>`,chips("dMet",[["n","Кол-во сделок"],["ar","Ср. площадь"],["ppm","Ср. цена м²"]],S.dMet));
 
   /* 3. Профиль сделок */
   const pf=m-S.prof+1;const FS=["без","чист.","отд."];const finTxt=p=>{if(p===3)return"Под чистовую / С отделкой";const sn=[...SNAPS.keys()].filter(i=>snapM(i)<=m&&PRICE.some(r=>r[0]===p&&r[1]===i)).pop()??[...SNAPS.keys()].filter(i=>PRICE.some(r=>r[0]===p&&r[1]===i)).pop();const set=new Set(PRICE.filter(r=>r[0]===p&&r[1]===sn&&r[6]>=0).map(r=>r[6]));return[...set].sort().map(i=>FN[i].toLowerCase()).join(" и ").replace(/^./,c=>c.toUpperCase())};
@@ -586,8 +588,8 @@ function renderDeal(){
 
   {const o=opts({hideY:true,autoSkip:false});o.plugins.datalabels=DL(v=>v,{size:11,color:css("--red")});o.scales.x.ticks.callback=(v,i)=>months[i]%12===0||i===0?[MN[months[i]%12],String(2024+Math.floor(months[i]/12))]:MN[months[i]%12];
    mk("d1","bar",{labels:months.map(mL),datasets:[{data:series,backgroundColor:css("--navy"),borderRadius:2,maxBarThickness:20}]},o)}
-  {const lr=[...pr].sort((a,b)=>b.v.at(-1)-a.v.at(-1));const o=opts({horizontal:true,padTop:4});o.plugins.datalabels=DL(v=>v,{size:14,color:css("--red")});o.scales.y.ticks.font={family:css("--font"),size:12};
-   mk("d2","bar",{labels:lr.map(r=>P[r.p]),datasets:[{data:lr.map(r=>r.v.at(-1)),backgroundColor:lr.map(r=>projCol(r.p)),borderRadius:2,maxBarThickness:22}]},o)}
+  {const lr=[...pr].filter(r=>r.w.at(-1)!=null&&r.w.at(-1)!=="").sort((a,b)=>b.w.at(-1)-a.w.at(-1));const o=opts({horizontal:true,padTop:4});o.plugins.datalabels=DL(v=>S.dMet==="n"?v:f1(v),{size:14,color:css("--red")});o.scales.y.ticks.font={family:css("--font"),size:12};
+   mk("d2","bar",{labels:lr.map(r=>P[r.p]),datasets:[{data:lr.map(r=>r.w.at(-1)),backgroundColor:lr.map(r=>projCol(r.p)),borderRadius:2,maxBarThickness:22}]},o)}
   for(const [id,key,fm] of [["d4a","ppm",f0],["d4b","bud",f0]]){const o=opts({hideY:true,tip:c=>" "+fm(dd[c.dataIndex][key])+" · "+f1(dd[c.dataIndex].ar)+" м2 · "+dd[c.dataIndex].n+" сделок"});
     o.plugins.datalabels={labels:{v:DL(fm,{size:11}),a:boxDL(dd.map(x=>x.n?x.ar:null),f1)}};
     mk(id,"bar",{labels:m14.map(mL),datasets:[{data:dd.map(x=>x.n?x[key]:null),backgroundColor:key==="ppm"?css("--navy"):css("--light"),borderRadius:3,maxBarThickness:40}]},o)}
