@@ -433,9 +433,9 @@ function renderExp(){
   let cmpDraw=null;
   if(roomsB.length){
     const nOwn=i=>cmpOwn.filter(r=>r[2]===i).length;
-    if(!roomsB.includes(S.cmpRoom))S.cmpRoom=roomsB.reduce((a,i)=>nOwn(i)>nOwn(a)?i:a,roomsB[0]);
-    const rl=cmpAll.filter(r=>r[2]===S.cmpRoom);
-    const ownB=cmpOwn.filter(r=>r[2]===S.cmpRoom);
+    if(S.cmpRoom!==9&&!roomsB.includes(S.cmpRoom))S.cmpRoom=roomsB.reduce((a,i)=>nOwn(i)>nOwn(a)?i:a,roomsB[0]);
+    const eAll=S.cmpRoom===9,eRN=eAll?"Все квартиры":RN[S.cmpRoom],rl=cmpAll.filter(r=>eAll||r[2]===S.cmpRoom);
+    const ownB=cmpOwn.filter(r=>eAll||r[2]===S.cmpRoom);
     const bksB=[...new Set(ownB.map(r=>bk5(r[3])))].sort((a,b)=>a-b);
     const nB=b=>ownB.filter(r=>bk5(r[3])===b).length;
     if(!bksB.includes(S.cmpB))S.cmpB=bksB.reduce((a,b)=>nB(b)>nB(a)?b:a,bksB[0]);
@@ -460,12 +460,12 @@ function renderExp(){
       tm+=c.n?`<td class="cell ${tone(dc)}"><b>${f0(c.ppm/1000)}</b>${dc!=null?` <span class="dv">${pc(dc)}</span>`:""}<span class="sm">${f1(c.bud/1e6)} млн · ${c.n} лот.</span></td></tr>`:"<td></td></tr>"}
     tm+="</tbody>";
     h+=slide("Сравнение лотов с конкурентами",`${date} · шаг 5 м², площадь по прайсу`,
-     `<div class="sh"><div class="ctls">${chips("cmpRoom",roomsB.map(i=>[i,RN[i]]),S.cmpRoom)}</div><div class="ctls">${chips("cmpB",bksB.map(b=>[b,bkL(b)]),S.cmpB)}</div></div>
-      ${me.n?note([`${RN[S.cmpRoom]} ${bkL(S.cmpB)}: у Бестселлера ${me.n} лот., цена м² <b>${f0(me.ppm)} ₽</b>, бюджет <b>${f2(me.bud/1e6)} млн ₽</b>, площадь ${f1(me.ar)} м²`,
+     `<div class="sh"><div class="ctls">${chips("cmpRoom",[[9,"Все квартиры"],...roomsB.map(i=>[i,RN[i]])],S.cmpRoom)}</div><div class="ctls">${chips("cmpB",bksB.map(b=>[b,bkL(b)]),S.cmpB)}</div></div>
+      ${me.n?note([`${eRN} ${bkL(S.cmpB)}: у Бестселлера ${me.n} лот., цена м² <b>${f0(me.ppm)} ₽</b>, бюджет <b>${f2(me.bud/1e6)} млн ₽</b>, площадь ${f1(me.ar)} м²`,
         cm.n?`Конкуренты в среднем: ${f0(cm.ppm)} ₽/м² (${pc(pct(me.ppm,cm.ppm))} у Бестселлера), бюджет ${f2(cm.bud/1e6)} млн ₽, площадь ${f1(cm.ar)} м²; Бестселлер ${rk}-й по цене из ${sel.length}`:"У конкурентов нет лотов в этом диапазоне",
         dearer.length||cheaper.length?`Дороже Бестселлера: ${dearer.join(", ")||"—"}; дешевле: ${cheaper.join(", ")||"—"}`:""].filter(Boolean)):""}
-      <div><div class="ct">${RN[S.cmpRoom]} ${bkL(S.cmpB)}: цена м², средний бюджет и средняя площадь<small>столбец — цена м², над ним — цена (тыс. ₽) и бюджет (млн ₽), плашка — средняя площадь, м²</small></div><div class="chart tall"><canvas id="e11"></canvas></div></div>
-      <div><div class="ct">${RN[S.cmpRoom]}: цена м², тыс. ₽, по диапазонам площади<small>в ячейке — цена м², отклонение от Бестселлера в том же диапазоне, средний бюджет и число лотов</small></div>
+      <div><div class="ct">${eRN} ${bkL(S.cmpB)}: цена м², средний бюджет и средняя площадь<small>столбец — цена м², над ним — цена (тыс. ₽) и бюджет (млн ₽), плашка — средняя площадь, м²</small></div><div class="chart tall"><canvas id="e11"></canvas></div></div>
+      <div><div class="ct">${eRN}: цена м², тыс. ₽, по диапазонам площади<small>в ячейке — цена м², отклонение от Бестселлера в том же диапазоне, средний бюджет и число лотов</small></div>
        <div class="legend"><span><span class="sw" style="background:var(--w3)"></span>конкурент дешевле на 10% и больше</span><span><span class="sw" style="background:var(--w1)"></span>дешевле на 1–5%</span><span><span class="sw" style="background:var(--c1)"></span>дороже на 1–5%</span><span><span class="sw" style="background:var(--c3)"></span>дороже на 10% и больше</span></div>
        <div class="tbl"><table class="mtx">${tm}</table></div></div>`);
     cmpDraw=()=>{const o=opts({hideY:true,padTop:44,tip:c=>{const x=sel[c.dataIndex].d;return" "+f0(x.ppm)+" ₽/м² · бюджет "+f2(x.bud/1e6)+" млн ₽ · "+f1(x.ar)+" м² · "+x.n+" лот."}});
@@ -619,8 +619,8 @@ function renderDeal(){
    // лот к лоту
    const roomsB=roomsAll.filter(i=>own.some(r=>r[3]===i));
    if(roomsB.length){
-     if(!roomsB.includes(S.dcRoom))S.dcRoom=roomsB.reduce((a,i)=>own.filter(r=>r[3]===i).length>own.filter(r=>r[3]===a).length?i:a,roomsB[0]);
-     const rl=rows.filter(r=>r[3]===S.dcRoom),ownB=rl.filter(r=>r[0]===0);
+     if(S.dcRoom!==9&&!roomsB.includes(S.dcRoom))S.dcRoom=roomsB.reduce((a,i)=>own.filter(r=>r[3]===i).length>own.filter(r=>r[3]===a).length?i:a,roomsB[0]);
+     const dAll=S.dcRoom===9,dRN=dAll?"Все квартиры":RN[S.dcRoom],rl=rows.filter(r=>dAll||r[3]===S.dcRoom),ownB=rl.filter(r=>r[0]===0);
      const bksB=[...new Set(ownB.map(r=>bk5(r[4])))].sort((a,b)=>a-b);
      if(!bksB.includes(S.dcB))S.dcB=bksB.reduce((a,b)=>ownB.filter(r=>bk5(r[4])===b).length>ownB.filter(r=>bk5(r[4])===a).length?b:a,bksB[0]);
      const projs=ALL.filter(p=>p===0||rl.some(r=>r[0]===p));
@@ -635,12 +635,12 @@ function renderDeal(){
      const me=cell(0,S.dcB),cm=dag(rl.filter(r=>r[0]!==0&&bk5(r[4])===S.dcB)),rk=sel.findIndex(x=>x.p===0)+1;
      const cheaper=sel.filter(x=>x.p&&x.d.ppm<me.ppm).map(x=>P[x.p]),dearer=sel.filter(x=>x.p&&x.d.ppm>me.ppm).map(x=>P[x.p]);
      h+=slide("Сравнение сделок лот к лоту",`${perL} · шаг 5 м², площадь приведённая`,
-      `<div class="sh"><div class="ctls">${chips("dcRoom",roomsB.map(i=>[i,RN[i]]),S.dcRoom)}</div><div class="ctls">${chips("dcB",bksB.map(b=>[b,bkL(b)]),S.dcB)}</div></div>
-       ${me.n?note([`${RN[S.dcRoom]} ${bkL(S.dcB)}: у Бестселлера ${me.n} сд., цена м² <b>${f0(me.ppm)} ₽</b>, бюджет <b>${f2(me.bud/1e6)} млн ₽</b>, площадь ${f1(me.ar)} м²`,
+      `<div class="sh"><div class="ctls">${chips("dcRoom",[[9,"Все квартиры"],...roomsB.map(i=>[i,RN[i]])],S.dcRoom)}</div><div class="ctls">${chips("dcB",bksB.map(b=>[b,bkL(b)]),S.dcB)}</div></div>
+       ${me.n?note([`${dRN} ${bkL(S.dcB)}: у Бестселлера ${me.n} сд., цена м² <b>${f0(me.ppm)} ₽</b>, бюджет <b>${f2(me.bud/1e6)} млн ₽</b>, площадь ${f1(me.ar)} м²`,
          cm.n?`Конкуренты в среднем: ${f0(cm.ppm)} ₽/м² (${pc(pct(me.ppm,cm.ppm))} у Бестселлера), бюджет ${f2(cm.bud/1e6)} млн ₽, ${cm.n} сд.; Бестселлер ${rk}-й по цене из ${sel.length}`:"У конкурентов нет сделок в этом диапазоне",
          dearer.length||cheaper.length?`Дороже Бестселлера: ${dearer.join(", ")||"—"}; дешевле: ${cheaper.join(", ")||"—"}`:""].filter(Boolean)):""}
-       <div><div class="ct">${RN[S.dcRoom]} ${bkL(S.dcB)}: цена м² в сделках, средний бюджет и площадь<small>столбец — цена м², над ним — цена (тыс. ₽) и бюджет (млн ₽), плашка — средняя площадь, м²</small></div><div class="chart tall"><canvas id="d9"></canvas></div></div>
-       <div><div class="ct">${RN[S.dcRoom]}: цена м² в сделках, тыс. ₽, по диапазонам площади<small>в ячейке — цена м², отклонение от Бестселлера в том же диапазоне, средний бюджет и число сделок</small></div>${legendT}
+       <div><div class="ct">${dRN} ${bkL(S.dcB)}: цена м² в сделках, средний бюджет и площадь<small>столбец — цена м², над ним — цена (тыс. ₽) и бюджет (млн ₽), плашка — средняя площадь, м²</small></div><div class="chart tall"><canvas id="d9"></canvas></div></div>
+       <div><div class="ct">${dRN}: цена м² в сделках, тыс. ₽, по диапазонам площади<small>в ячейке — цена м², отклонение от Бестселлера в том же диапазоне, средний бюджет и число сделок</small></div>${legendT}
         <div class="tbl"><table class="mtx">${tm}</table></div></div>`,perChips);
      dcmpDraw=()=>{const o=opts({hideY:true,padTop:44,tip:c=>{const x=sel[c.dataIndex].d;return" "+f0(x.ppm)+" ₽/м² · бюджет "+f2(x.bud/1e6)+" млн ₽ · "+f1(x.ar)+" м² · "+x.n+" сд."}});
        o.plugins.datalabels={labels:{v:{anchor:"end",align:"end",offset:2,textAlign:"center",formatter:(v,c)=>[f0(v/1000)+" тыс.",f1(sel[c.dataIndex].d.bud/1e6)+" млн"],color:c=>sel[c.dataIndex].p===0?css("--own"):css("--ink"),font:{family:css("--font"),weight:"700",size:12}},a:boxDL(sel.map(x=>x.d.ar),f1)}};
