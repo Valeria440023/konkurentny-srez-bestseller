@@ -537,11 +537,12 @@ function renderDeal(){
   h+=slide(`Сделки. ${mLong(m)}`,tn,
    `${note([d1Note,`Лидер месяца — ${P[lead[0].p]} (${lead[0].v.at(-1)}), далее ${lead.slice(1,3).map(r=>P[r.p]+" ("+r.v.at(-1)+")").join(", ")}`,`Бестселлер: ${pr.find(r=>r.p===0).v.at(-1)} сделок в месяце, ${pr.find(r=>r.p===0).v.reduce((a,b)=>a+b)} за 12 мес`])}
     <div class="cols"><div><div class="sh"><div class="ct">Сделки по месяцам, шт<small>${dl} · <span class="${cls(mom)}">${pc(mom)}</span> за посл. месяц</small></div>${scopeSel("dScope",S.dScope)}</div><div class="chart tall"><canvas id="d1"></canvas></div></div>
-     <div><div class="ct">${mT} за ${mLong(m)}, ${mU}<small>по проектам · переключатель вверху справа</small></div><div class="chart tall"><canvas id="d2"></canvas></div></div></div>
-    <div class="tbl" style="margin-top:16px"><table><thead><tr><th>Проект</th>${ms.map(x=>`<th>${mL(x)}</th>`).join("")}<th>Прирост за посл. месяц</th></tr></thead><tbody>
+     <div><div class="ct">Сделки за ${mLong(m)}, шт<small>по проектам</small></div><div class="chart tall"><canvas id="d2"></canvas></div></div></div>
+    <div class="sh" style="margin-top:16px"><div class="ct">${mT} по месяцам, ${mU}<small>таблица по проектам</small></div><div class="ctls">${chips("dMet",[["n","Кол-во сделок"],["ar","Ср. площадь"],["ppm","Ср. цена м²"]],S.dMet)}</div></div>
+    <div class="tbl"><table><thead><tr><th>Проект</th>${ms.map(x=>`<th>${mL(x)}</th>`).join("")}<th>Прирост за посл. месяц</th></tr></thead><tbody>
      ${pr.map(r=>`<tr class="${r.p===0?"me":""}"><td>${P[r.p]}</td>${r.w.map(v=>`<td>${mF(v)}</td>`).join("")}<td class="${cls(pct(r.w.at(-1),r.w.at(-2)))}">${pc(pct(r.w.at(-1),r.w.at(-2)))}</td></tr>`).join("")}
      <tr class="sub"><td>Общий итог</td>${ms.map(x=>`<td>${mF(mv(x,ALL))}</td>`).join("")}<td>${pc(pct(mv(m,ALL),mv(m-1,ALL)))}</td></tr>
-     <tr class="tot"><td>Локация Перово</td>${ms.map(x=>`<td>${mF(mv(x,PER))}</td>`).join("")}<td>${pc(pct(mv(m,PER),mv(m-1,PER)))}</td></tr></tbody></table></div>`,chips("dMet",[["n","Кол-во сделок"],["ar","Ср. площадь"],["ppm","Ср. цена м²"]],S.dMet));
+     <tr class="tot"><td>Локация Перово</td>${ms.map(x=>`<td>${mF(mv(x,PER))}</td>`).join("")}<td>${pc(pct(mv(m,PER),mv(m-1,PER)))}</td></tr></tbody></table></div>`);
 
   /* 3. Профиль сделок */
   const pf=m-S.prof+1;const FS=["без","чист.","отд."];const finTxt=p=>{if(p===3)return"Под чистовую / С отделкой";const sn=[...SNAPS.keys()].filter(i=>snapM(i)<=m&&PRICE.some(r=>r[0]===p&&r[1]===i)).pop()??[...SNAPS.keys()].filter(i=>PRICE.some(r=>r[0]===p&&r[1]===i)).pop();const set=new Set(PRICE.filter(r=>r[0]===p&&r[1]===sn&&r[6]>=0).map(r=>r[6]));return[...set].sort().map(i=>FN[i].toLowerCase()).join(" и ").replace(/^./,c=>c.toUpperCase())};
@@ -591,8 +592,8 @@ function renderDeal(){
 
   {const o=opts({hideY:true,autoSkip:false});o.plugins.datalabels=DL(v=>v,{size:11,color:css("--red")});o.scales.x.ticks.callback=(v,i)=>months[i]%12===0||i===0?[MN[months[i]%12],String(2024+Math.floor(months[i]/12))]:MN[months[i]%12];
    mk("d1","bar",{labels:months.map(mL),datasets:[{data:series,backgroundColor:css("--navy"),borderRadius:2,maxBarThickness:20}]},o)}
-  {const lr=[...pr].filter(r=>r.w.at(-1)!=null&&r.w.at(-1)!=="").sort((a,b)=>b.w.at(-1)-a.w.at(-1));const o=opts({horizontal:true,padTop:4});o.plugins.datalabels=DL(v=>S.dMet==="n"?v:f1(v),{size:14,color:css("--red")});o.scales.y.ticks.font={family:css("--font"),size:12};
-   mk("d2","bar",{labels:lr.map(r=>P[r.p]),datasets:[{data:lr.map(r=>r.w.at(-1)),backgroundColor:lr.map(r=>projCol(r.p)),borderRadius:2,maxBarThickness:22}]},o)}
+  {const lr=[...pr].sort((a,b)=>b.v.at(-1)-a.v.at(-1));const o=opts({horizontal:true,padTop:4});o.plugins.datalabels=DL(v=>v,{size:14,color:css("--red")});o.scales.y.ticks.font={family:css("--font"),size:12};
+   mk("d2","bar",{labels:lr.map(r=>P[r.p]),datasets:[{data:lr.map(r=>r.v.at(-1)),backgroundColor:lr.map(r=>projCol(r.p)),borderRadius:2,maxBarThickness:22}]},o)}
   for(const [id,key,fm] of [["d4a","ppm",f0],["d4b","bud",f0]]){const o=opts({hideY:true,tip:c=>" "+fm(dd[c.dataIndex][key])+" · "+f1(dd[c.dataIndex].ar)+" м2 · "+dd[c.dataIndex].n+" сделок"});
     o.plugins.datalabels={labels:{v:DL(fm,{size:11}),a:boxDL(dd.map(x=>x.n?x.ar:null),f1)}};
     mk(id,"bar",{labels:m14.map(mL),datasets:[{data:dd.map(x=>x.n?x[key]:null),backgroundColor:key==="ppm"?css("--navy"):css("--light"),borderRadius:3,maxBarThickness:40}]},o)}
