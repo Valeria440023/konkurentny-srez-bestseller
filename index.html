@@ -510,7 +510,7 @@ function renderExp(){
     mk(id,"line",{labels:L,datasets:ser.map(([ps_,c,l,w])=>({label:l,data:idx.map(i=>{const d=ag(E(i,ps_));return d.n?d[key]:null}),borderColor:c,backgroundColor:c,borderWidth:w,pointRadius:w>2?3:0,tension:.25,spanGaps:false}))},o)}
   if(cmpDraw)cmpDraw();
 }
-function finS(s){/* короткая отделка для подписей оси: в одну строку без поворота */return s.toLowerCase().replace("под чистовую / с отделкой","чистовая / отделка").replace(/без отделки/g,"без отд.").replace(/под чистовую/g,"чистовая").replace(/с отделкой/g,"с отд.").replace(/ и /g," + ")}
+function finS(s){/* короткая отделка для подписей оси: в одну строку без поворота */return s.toLowerCase().replace("под чистовую / с отделкой","под чист. / с отд.").replace(/без отделки/g,"без отд.").replace(/под чистовую/g,"под чист.").replace(/с отделкой/g,"с отд.").replace(/ и /g," + ")}
 function splitL(s){const w=s.split(" / ")[0].split(" ");const out=[];let cur="";for(const x of w){if((cur+" "+x).trim().length>14&&cur){out.push(cur);cur=x}else cur=(cur+" "+x).trim()}out.push(cur);return out}
 
 /* ================= СДЕЛКИ ================= */
