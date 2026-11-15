@@ -468,9 +468,9 @@ function renderExp(){
       <div><div class="ct">${eRN}: цена м², тыс. ₽, по диапазонам площади<small>в ячейке — цена м², отклонение от Бестселлера в том же диапазоне, средний бюджет и число лотов</small></div>
        <div class="legend"><span><span class="sw" style="background:var(--w3)"></span>конкурент дешевле на 10% и больше</span><span><span class="sw" style="background:var(--w1)"></span>дешевле на 1–5%</span><span><span class="sw" style="background:var(--c1)"></span>дороже на 1–5%</span><span><span class="sw" style="background:var(--c3)"></span>дороже на 10% и больше</span></div>
        <div class="tbl"><table class="mtx">${tm}</table></div></div>`);
-    cmpDraw=()=>{const o=opts({hideY:true,padTop:44,tip:c=>{const x=sel[c.dataIndex].d;return" "+f0(x.ppm)+" ₽/м² · бюджет "+f2(x.bud/1e6)+" млн ₽ · "+f1(x.ar)+" м² · "+x.n+" лот."}});
+    cmpDraw=()=>{const o=opts({hideY:true,padTop:44,rot:0,autoSkip:false,tip:c=>{const x=sel[c.dataIndex].d;return" "+f0(x.ppm)+" ₽/м² · бюджет "+f2(x.bud/1e6)+" млн ₽ · "+f1(x.ar)+" м² · "+x.n+" лот."}});
       o.plugins.datalabels={labels:{v:{anchor:"end",align:"end",offset:2,textAlign:"center",formatter:(v,c)=>[f0(v/1000)+" тыс.",f1(sel[c.dataIndex].d.bud/1e6)+" млн"],color:c=>sel[c.dataIndex].p===0?css("--own"):css("--ink"),font:{family:css("--font"),weight:"700",size:12}},a:boxDL(sel.map(x=>x.d.ar),f1)}};
-      mk("e11","bar",{labels:sel.map(x=>[...splitL(x.e.lab),finE(x.e).toLowerCase(),x.d.n+" лот."]),datasets:[{data:sel.map(x=>x.d.ppm),backgroundColor:sel.map(x=>projCol(x.p)),borderRadius:4,maxBarThickness:54}]},o)};
+      mk("e11","bar",{labels:sel.map(x=>[...splitL(x.e.lab),finS(finE(x.e)),x.d.n+" лот."]),datasets:[{data:sel.map(x=>x.d.ppm),backgroundColor:sel.map(x=>projCol(x.p)),borderRadius:4,maxBarThickness:54}]},o)};
   }
 
   pane.innerHTML=h;bindChips();kill();
@@ -510,6 +510,7 @@ function renderExp(){
     mk(id,"line",{labels:L,datasets:ser.map(([ps_,c,l,w])=>({label:l,data:idx.map(i=>{const d=ag(E(i,ps_));return d.n?d[key]:null}),borderColor:c,backgroundColor:c,borderWidth:w,pointRadius:w>2?3:0,tension:.25,spanGaps:false}))},o)}
   if(cmpDraw)cmpDraw();
 }
+function finS(s){/* короткая отделка для подписей оси: в одну строку без поворота */return s.toLowerCase().replace("под чистовую / с отделкой","чистовая / отделка").replace(/без отделки/g,"без отд.").replace(/под чистовую/g,"чистовая").replace(/с отделкой/g,"с отд.").replace(/ и /g," + ")}
 function splitL(s){const w=s.split(" / ")[0].split(" ");const out=[];let cur="";for(const x of w){if((cur+" "+x).trim().length>14&&cur){out.push(cur);cur=x}else cur=(cur+" "+x).trim()}out.push(cur);return out}
 
 /* ================= СДЕЛКИ ================= */
@@ -642,9 +643,9 @@ function renderDeal(){
        <div><div class="ct">${dRN} ${bkL(S.dcB)}: цена м² в сделках, средний бюджет и площадь<small>столбец — цена м², над ним — цена (тыс. ₽) и бюджет (млн ₽), плашка — средняя площадь, м²</small></div><div class="chart tall"><canvas id="d9"></canvas></div></div>
        <div><div class="ct">${dRN}: цена м² в сделках, тыс. ₽, по диапазонам площади<small>в ячейке — цена м², отклонение от Бестселлера в том же диапазоне, средний бюджет и число сделок</small></div>${legendT}
         <div class="tbl"><table class="mtx">${tm}</table></div></div>`,perChips);
-     dcmpDraw=()=>{const o=opts({hideY:true,padTop:44,tip:c=>{const x=sel[c.dataIndex].d;return" "+f0(x.ppm)+" ₽/м² · бюджет "+f2(x.bud/1e6)+" млн ₽ · "+f1(x.ar)+" м² · "+x.n+" сд."}});
+     dcmpDraw=()=>{const o=opts({hideY:true,padTop:44,rot:0,autoSkip:false,tip:c=>{const x=sel[c.dataIndex].d;return" "+f0(x.ppm)+" ₽/м² · бюджет "+f2(x.bud/1e6)+" млн ₽ · "+f1(x.ar)+" м² · "+x.n+" сд."}});
        o.plugins.datalabels={labels:{v:{anchor:"end",align:"end",offset:2,textAlign:"center",formatter:(v,c)=>[f0(v/1000)+" тыс.",f1(sel[c.dataIndex].d.bud/1e6)+" млн"],color:c=>sel[c.dataIndex].p===0?css("--own"):css("--ink"),font:{family:css("--font"),weight:"700",size:12}},a:boxDL(sel.map(x=>x.d.ar),f1)}};
-       mk("d9","bar",{labels:sel.map(x=>[...splitL(P[x.p]),finTxt(x.p).toLowerCase(),x.d.n+" сд."]),datasets:[{data:sel.map(x=>x.d.ppm),backgroundColor:sel.map(x=>projCol(x.p)),borderRadius:4,maxBarThickness:54}]},o)};
+       mk("d9","bar",{labels:sel.map(x=>[...splitL(P[x.p]),finS(finTxt(x.p)),x.d.n+" сд."]),datasets:[{data:sel.map(x=>x.d.ppm),backgroundColor:sel.map(x=>projCol(x.p)),borderRadius:4,maxBarThickness:54}]},o)};
    }}
 
   pane.innerHTML=h;bindChips();kill();
