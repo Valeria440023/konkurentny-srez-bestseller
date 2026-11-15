@@ -562,11 +562,8 @@ function renderDeal(){
   for(const [lab,fn] of [["Сделок, шт",d=>d.n],["Ср. площадь, м²",d=>f1(d.ar)],["Цена м², тыс. ₽",d=>f0(d.ppm/1000)],["Бюджет, млн ₽",d=>f1(d.bud/1e6)]]){
     t3+=`<tr class="sub"><td>${lab}</td>${colsAll.map(ps=>`<td>${cellR(ps,null,fn)}</td>`).join("")}</tr>`;
     for(const i of rooms)t3+=`<tr><td class="ind">${RS[i]==="ст"?"студии":RS[i]+"-комн."}</td>${colsAll.map(ps=>`<td>${cellR(ps,i,fn)}</td>`).join("")}</tr>`}
-  /* отделка в сделках: доля среди сделок, где она известна (r[10]: 0 без, 1 под чистовую, 2 с отделкой, -1 нет данных) */
-  const finK=ps=>D(pf,m,ps).filter(r=>r[10]>=0),finC=(ps,k)=>{const kn=finK(ps),x=kn.filter(r=>r[10]===k).length;return kn.length&&x?f0(x/kn.length*100)+"%":""};
-  t3+=`<tr class="sub"><td>Отделка в сделках<span class="muted" style="font-weight:400;font-size:11px"> · известна у</span></td>${colsAll.map(ps=>{const n=D(pf,m,ps).length,kn=finK(ps).length;return`<td class="muted" style="font-weight:400;font-size:11px">${n&&kn<n?`${kn} из ${n} сд.`:""}</td>`}).join("")}</tr>${[[0,"без отделки"],[1,"под чистовую"],[2,"с отделкой"]].map(([k,l])=>`<tr><td class="ind">${l}</td>${colsAll.map(ps=>`<td>${finC(ps,k)}</td>`).join("")}</tr>`).join("")}`;
   t3+=`<tr class="tot"><td>Ипотека</td>${colsAll.map(ps=>`<td>${cellR(ps,null,d=>f0(d.mort)+"%")}</td>`).join("")}</tr></tbody>`;
-  h+=slide(`Сделки. Профиль спроса`,`${mL(pf)} – ${mL(m)} · ${tn}`,`<div class="tbl"><table class="cmp">${t3}</table></div><div class="foot">Отделка в сделках: у Бестселлера — по договорам (отделка — опция, без неё квартира под чистовую); у конкурентов — по лоту в прайсе bnmap, если лот там был, иначе по корпусу; где отделка известна не у всех сделок, рядом указано, у скольких. Аквилон BESIDE 2.0 продаёт отделку опцией, но в bnmap видно только «под чистовую» — купленную опцию не видно.</div>`,
+  h+=slide(`Сделки. Профиль спроса`,`${mL(pf)} – ${mL(m)} · ${tn}`,`<div class="tbl"><table class="cmp">${t3}</table></div>`,
     chips("prof",[[1,"Месяц"],[3,"3 мес"],[6,"6 мес"],[12,"12 мес"]],S.prof));
 
   /* 4. Цена и бюджет в сделках */
