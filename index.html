@@ -162,6 +162,7 @@ table.chg th{white-space:normal;vertical-align:bottom}
 @media (max-width:600px){h1{font-size:17px}.sh h2{font-size:16px}.chart{height:240px}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 /* вкладка «Инструменты» */
+.doc-link{flex-direction:row;align-items:center;gap:16px;padding:16px 22px;text-decoration:none;color:var(--ink);border:1.5px solid var(--own)} .doc-link:hover{background:var(--own-soft)} .doc-link b{display:block;font-size:15px;font-weight:600} .doc-link small{display:block;font-size:12.5px;color:var(--ink2);margin-top:2px} .doc-ic{width:40px;height:40px;flex:none;display:grid;place-items:center;border-radius:10px;background:var(--own);color:#fff;font-size:20px;font-weight:700}
 table.tl-t{font-size:12px;min-width:1000px;table-layout:fixed}
 table.tl-t th,table.tl-t td{text-align:left;vertical-align:top;white-space:normal;padding:9px 8px;line-height:1.35}
 table.tl-t td:first-child b{display:block;font-size:12.5px} table.tl-t td:first-child small{display:block;color:var(--muted);font-size:10.5px;margin-top:2px;font-weight:400}
@@ -767,6 +768,7 @@ const TREC=[
 ];
 function renderTool(){
   const pane=document.getElementById("pane");let h="";
+  if(typeof TDOC!=="undefined")h+=`<a class="slide doc-link" href="${TDOC.url}" target="_blank" rel="noopener"><span class="doc-ic" aria-hidden="true">↗</span><span><b>${TDOC.title}</b><small>${TDOC.sub}</small></span></a>`;
   const name=p=>`<td><b>${p===4?"Квартал Издание":P[p]}</b><small>${TDEV[p]}</small></td>`;
   const tools=S.tTool==="all"?TTOOLS:TTOOLS.filter(([k])=>k===S.tTool);
   const cnt=k=>TPROJ.filter(p=>p&&TSALES[p][k][0]==="y").length,nC=TPROJ.filter(p=>p).length;
