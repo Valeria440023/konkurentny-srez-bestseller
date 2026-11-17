@@ -247,7 +247,7 @@ const xlS=n=>{const d=xl(n);return String(d.getUTCDate()).padStart(2,"0")+"."+St
 const xlM=n=>{const d=xl(n);return MN[d.getUTCMonth()]+"."+String(d.getUTCFullYear()).slice(2)};
 const LASTM=(d=>(+d[2]-2024)*12+(+d[1]-1)-1)("12.11.2026".split(".")); // последний полный месяц сделок = месяц до выгрузки
 const PART=x=>x===LASTM?`неполный месяц: в выгрузке договоры по ${typeof DMAX!=="undefined"?DMAX:"~3-ю неделю"} (≈3 недели), месяц дорастёт по мере регистрации договоров`:"";
-const S={det:{},tTool:"all",tPer:6,cmpRoom:-1,cmpB:-1,bPer:"all",tab:"exp",dMet:"n",dcPer:3,dcRoom:-1,dcB:-1,morScope:"all",snap:SNAPS.length-1,mon:LASTM,otype:0,unit:"n",dScope:"all",prof:3,card:0,mScope:"all"};
+const S={det:{},tTool:"all",tPer:6,cmpRoom:-1,cmpB:-1,bPer:"all",tab:"exp",dMet:"n",dcPer:3,dcRoom:-1,dcB:-1,morScope:"all",snap:SNAPS.length-1,mon:LASTM,otype:0,unit:"n",dScope:"all",prof:3,profR:1,card:0,mScope:"all"};
 try{const v=localStorage.getItem("bs2-tab");if(v==="deal"||v==="best"||v==="sum"||v==="tool")S.tab=v}catch(e){}if(location.hash==="#summary")S.tab="sum";if(location.hash==="#deals")S.tab="deal";if(location.hash==="#tools")S.tab="tool";if(location.hash==="#sales")S.tab="best";if(!SHOW_BEST&&S.tab==="best")S.tab="exp";if(location.hash==="#exposure")S.tab="exp";
 const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 const f0=v=>v==null||!isFinite(v)?"":Math.round(v).toLocaleString("ru-RU");
@@ -579,10 +579,12 @@ function renderDeal(){
    <tr><td style="vertical-align:middle">Отделка</td>${cols.map(p=>`<td class="muted" style="white-space:normal;text-align:center;vertical-align:middle">${finTxt(p)}</td>`).join("")}<td></td></tr>`;
   for(const [lab,fn] of [["Сделок, шт",d=>d.n],["Ср. площадь, м²",d=>f1(d.ar)],["Цена м², тыс. ₽",d=>f0(d.ppm/1000)],["Бюджет, млн ₽",d=>f1(d.bud/1e6)]]){
     t3+=`<tr class="sub"><td>${lab}</td>${colsAll.map(ps=>`<td>${cellR(ps,null,fn)}</td>`).join("")}</tr>`;
-    for(const i of rooms)t3+=`<tr><td class="ind">${RS[i]==="ст"?"студии":RS[i]+"-комн."}</td>${colsAll.map(ps=>`<td>${cellR(ps,i,fn)}</td>`).join("")}</tr>`}
+    if(S.profR)for(const i of rooms)t3+=`<tr><td class="ind">${RS[i]==="ст"?"студии":RS[i]+"-комн."}</td>${colsAll.map(ps=>`<td>${cellR(ps,i,fn)}</td>`).join("")}</tr>`}
   t3+=`<tr class="tot"><td>Ипотека</td>${colsAll.map(ps=>`<td>${cellR(ps,null,d=>f0(d.mort)+"%")}</td>`).join("")}</tr></tbody>`;
-  h+=slide(`Сделки. Профиль спроса`,`${mL(pf)} – ${mL(m)} · ${tn}`,`<div class="tbl"><table class="cmp">${t3}</table></div>`,
-    chips("prof",[[1,"Месяц"],[3,"3 мес"],[6,"6 мес"],[12,"12 мес"]],S.prof));
+  h+=slide(`Сделки. Профиль спроса`,`${mL(pf)} – ${mL(m)} · ${tn}`,`<div class="tbl"><table class="cmp">${t3}</table></div>
+    <div class="ct" style="margin-top:18px">Профиль спроса в графике<small>без разбивки на комнатность; «Итого» — вся локация (кроме графика сделок)</small></div>
+    <div class="cols" style="grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))">${[["pf0","Сделок, шт"],["pf1","Ср. площадь, м²"],["pf2","Цена м², тыс. ₽"],["pf3","Бюджет, млн ₽"],["pf4","Доля ипотеки"]].map(([id,l])=>`<div><div class="ct">${l}</div><div class="chart" style="height:${cols.length*26+40}px"><canvas id="${id}"></canvas></div></div>`).join("")}</div>`,
+    chips("profR",[[1,"С комнатностью"],[0,"Без комнатности"]],S.profR)+chips("prof",[[1,"Месяц"],[3,"3 мес"],[6,"6 мес"],[12,"12 мес"]],S.prof));
 
   /* 4. Цена и бюджет в сделках */
   const [mps,ml]=scopes[S.mScope];const m14=[...Array(12).keys()].map(i=>m-11+i).filter(x=>x>=0);const dd=m14.map(x=>dag(D(x,x,mps)));
@@ -673,6 +675,11 @@ function renderDeal(){
    mk("d1","bar",{labels:months.map(mL),datasets:[{data:series,backgroundColor:css("--navy"),borderRadius:2,maxBarThickness:20}]},o)}
   {const lr=[...pr].sort((a,b)=>b.v.at(-1)-a.v.at(-1));const o=opts({horizontal:true,padTop:4});o.plugins.datalabels=DL(v=>v,{size:14,color:css("--red")});o.scales.y.ticks.font={family:css("--font"),size:12};
    mk("d2","bar",{labels:lr.map(r=>P[r.p]),datasets:[{data:lr.map(r=>r.v.at(-1)),backgroundColor:lr.map(r=>projCol(r.p)),borderRadius:2,maxBarThickness:22}]},o)}
+  /* профиль спроса в графике: по проектам без комнатности */
+  {const SN={0:"Бестселлер",1:"Плеханова 11",2:"Баланс",3:"Аквилон 2.0",4:"Издание, 1 оч",8:"Издание, 2 оч",5:"Level",6:"District 39",7:"MYPRIORITY"};
+   const it=[...cols.map(p=>({l:SN[p]??P[p],ps:[p],c:projCol(p)})),{l:"Итого",ps:ALL,c:css("--gray")}].map(x=>({...x,d:dag(D(pf,m,x.ps))}));
+   for(const [id,fn,fm] of [["pf0",d=>d.n,v=>v],["pf1",d=>d.ar,f1],["pf2",d=>d.ppm/1000,f0],["pf3",d=>d.bud/1e6,f1],["pf4",d=>d.mort,v=>f0(v)+"%"]]){const o=opts({horizontal:true,hideY:true,padTop:4});o.plugins.datalabels=DL(fm,{size:11});o.scales.y.ticks.font={family:css("--font"),size:11};
+    const jt=id==="pf0"?it.slice(0,-1):it;mk(id,"bar",{labels:jt.map(x=>x.l),datasets:[{data:jt.map(x=>x.d.n?fn(x.d):null),backgroundColor:jt.map(x=>x.c),borderRadius:2,maxBarThickness:18}]},o)}}
   for(const [id,key,fm] of [["d4a","ppm",f0],["d4b","bud",f0]]){const o=opts({hideY:true,tip:c=>" "+fm(dd[c.dataIndex][key])+" · "+f1(dd[c.dataIndex].ar)+" м2 · "+dd[c.dataIndex].n+" сделок"});
     o.plugins.datalabels={labels:{v:DL(fm,{size:11}),a:boxDL(dd.map(x=>x.n?x.ar:null),f1)}};
     mk(id,"bar",{labels:m14.map(mL),datasets:[{data:dd.map(x=>x.n?x[key]:null),backgroundColor:key==="ppm"?css("--navy"):css("--light"),borderRadius:3,maxBarThickness:40}]},o)}
