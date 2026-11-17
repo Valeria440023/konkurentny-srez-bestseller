@@ -120,6 +120,9 @@ table.cmp th{white-space:normal;vertical-align:middle;font-size:13px;font-weight
 table.cmp td:first-child{min-width:0;white-space:nowrap}
 table.cmp td.ind{padding-left:20px;color:var(--ink2)}
 table.cmp tr.sub>td:nth-child(2),table.cmp tr.tot>td:nth-child(2){font-weight:700}
+/* «Профиль спроса: итоги» — без заливки, Бестселлер выделен цветом текста */
+table.cmp.plain td,table.cmp.plain th,table.cmp.plain tbody tr:hover td{background:transparent!important;box-shadow:none!important} table.cmp.plain td{padding:7px 8px}
+table.cmp.plain td:first-child{font-weight:600} table.cmp.plain td:nth-child(2),table.cmp.plain th:nth-child(2){color:var(--own);font-weight:700} table.cmp.plain td:last-child,table.cmp.plain th:last-child{font-weight:700}
 .legend{display:flex;flex-wrap:wrap;justify-content:flex-start;gap:6px 16px;font-size:12.5px;color:var(--ink2);margin-top:8px}
 .legend span{display:inline-flex;align-items:center;gap:6px}
 .sw{width:12px;height:12px;border-radius:4px;flex:none}
@@ -581,10 +584,20 @@ function renderDeal(){
     t3+=`<tr class="sub"><td>${lab}</td>${colsAll.map(ps=>`<td>${cellR(ps,null,fn)}</td>`).join("")}</tr>`;
     if(S.profR)for(const i of rooms)t3+=`<tr><td class="ind">${RS[i]==="ст"?"студии":RS[i]+"-комн."}</td>${colsAll.map(ps=>`<td>${cellR(ps,i,fn)}</td>`).join("")}</tr>`}
   t3+=`<tr class="tot"><td>Ипотека</td>${colsAll.map(ps=>`<td>${cellR(ps,null,d=>f0(d.mort)+"%")}</td>`).join("")}</tr></tbody>`;
-  h+=slide(`Сделки. Профиль спроса`,`${mL(pf)} – ${mL(m)} · ${tn}`,`<div class="tbl"><table class="cmp">${t3}</table></div>
-    <div class="ct" style="margin-top:18px">Цена м², средняя площадь и число сделок<small>без разбивки на комнатность; «Итого» — вся локация (без точки сделок: она вне масштаба)</small></div>
-    <div class="chart tall"><canvas id="pf0"></canvas></div>${legend([["Цена м², тыс. ₽ (столбик)",css("--navy")],["Средняя площадь, м² (плашка)",css("--red")],["Сделок, шт (точка)","#002346"]])}`,
+  h+=slide(`Сделки. Профиль спроса`,`${mL(pf)} – ${mL(m)} · ${tn}`,`<div class="tbl"><table class="cmp">${t3}</table></div>`,
     chips("profR",[[1,"С комнатностью"],[0,"Без комнатности"]],S.profR)+chips("prof",[[1,"Месяц"],[3,"3 мес"],[6,"6 мес"],[12,"12 мес"]],S.prof));
+  /* 3а. Профиль спроса — итоги по проектам: без комнатности и заливки, конкуренты по убыванию цены м², + сводный график */
+  const ppmOf=p=>{const r=D(pf,m,[p]);return r.length?dag(r).ppm:0};
+  const cols2=[0,...cols.filter(p=>p).sort((a,b)=>ppmOf(b)-ppmOf(a))].filter(p=>cols.includes(p)),colsAll2=[...cols2.map(p=>[p]),ALL];
+  let t4=`<colgroup><col class="lab">${colsAll2.map(()=>"<col>").join("")}</colgroup><thead><tr><th></th>${cols2.map(p=>`<th>${P[p]}</th>`).join("")}<th>Итого</th></tr></thead><tbody>
+   <tr><td>Отделка</td>${cols2.map(p=>`<td class="muted" style="white-space:normal;text-align:center">${finTxt(p)}</td>`).join("")}<td></td></tr>`;
+  for(const [lab,fn] of [["Сделок, шт",d=>d.n],["Ср. площадь, м²",d=>f1(d.ar)],["Цена м², тыс. ₽",d=>f1(d.ppm/1000)],["Бюджет, млн ₽",d=>f1(d.bud/1e6)],["Ипотека",d=>f0(d.mort)+"%"]])
+    t4+=`<tr><td>${lab}</td>${colsAll2.map(ps=>`<td>${cellR(ps,null,fn)}</td>`).join("")}</tr>`;
+  t4+=`</tbody>`;
+  h+=slide(`Сделки. Профиль спроса: итоги по проектам`,`${mL(pf)} – ${mL(m)} · ${tn} · конкуренты по убыванию цены м²`,`<div class="tbl"><table class="cmp plain">${t4}</table></div>
+    <div class="ct" style="margin-top:18px">Цена м², средняя площадь и число сделок<small>по проектам, в том же порядке, что и таблица</small></div>
+    <div class="chart tall"><canvas id="pf0"></canvas></div>${legend([["Цена м², тыс. ₽ (столбик)",css("--navy")],["Средняя площадь, м² (плашка)",css("--red")],["Сделок, шт (точка)","#002346"]])}`,
+    chips("prof",[[1,"Месяц"],[3,"3 мес"],[6,"6 мес"],[12,"12 мес"]],S.prof));
 
   /* 4. Цена и бюджет в сделках */
   const [mps,ml]=scopes[S.mScope];const m14=[...Array(12).keys()].map(i=>m-11+i).filter(x=>x>=0);const dd=m14.map(x=>dag(D(x,x,mps)));
@@ -677,10 +690,10 @@ function renderDeal(){
    mk("d2","bar",{labels:lr.map(r=>P[r.p]),datasets:[{data:lr.map(r=>r.v.at(-1)),backgroundColor:lr.map(r=>projCol(r.p)),borderRadius:2,maxBarThickness:22}]},o)}
   /* профиль спроса в графике: по проектам без комнатности */
   {const SN={0:"Бестселлер",1:"Плеханова 11",2:"Баланс",3:"Аквилон 2.0",4:"Издание, 1 оч",8:"Издание, 2 оч",5:"Level",6:"District 39",7:"MYPRIORITY"};
-   const it=[...cols.map(p=>({l:SN[p]??P[p],ps:[p],c:projCol(p)})),{l:"Итого",ps:ALL,c:css("--gray")}].map(x=>({...x,d:dag(D(pf,m,x.ps))}));
+   const it=[...cols2.map(p=>({l:SN[p]??P[p],ps:[p],c:projCol(p)}))].map(x=>({...x,d:dag(D(pf,m,x.ps))}));
    const o=opts({hideY:true,rot:0,autoSkip:false,tip:c=>{const d=it[c.dataIndex].d;return" "+f0(d.ppm)+" ₽/м² · "+f1(d.ar)+" м² · бюджет "+f1(d.bud/1e6)+" млн ₽ · "+d.n+" сд."}});
-   o.plugins.datalabels={labels:{v:DL(v=>f0(v/1000),{size:12}),a:boxDL(it.map(x=>x.d.n?x.d.ar:null),f1)}};
-   const nn=it.map((x,i)=>i<it.length-1&&x.d.n?x.d.n:null),nMax=Math.max(...nn.filter(v=>v!=null),1);
+   o.plugins.datalabels={labels:{v:DL(v=>f1(v/1000),{size:12}),a:boxDL(it.map(x=>x.d.n?x.d.ar:null),f1)}};
+   const nn=it.map(x=>x.d.n?x.d.n:null),nMax=Math.max(...nn.filter(v=>v!=null),1);
    o.scales.y2={display:false,beginAtZero:false,min:-nMax*0.5,max:nMax*1.9,grid:{display:false}};
    mk("pf0","bar",{labels:it.map(x=>x.l),datasets:[{data:it.map(x=>x.d.n?x.d.ppm:null),backgroundColor:it.map(x=>x.c),borderRadius:3,maxBarThickness:54,order:2},
     {type:"line",data:nn,yAxisID:"y2",showLine:false,pointRadius:6,pointHoverRadius:7,pointBackgroundColor:"#002346",pointBorderColor:"#fff",pointBorderWidth:2,order:1,
